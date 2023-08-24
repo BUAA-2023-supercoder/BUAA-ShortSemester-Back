@@ -2,6 +2,7 @@ import json
 import random
 
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
 from django.http import JsonResponse
 from django.template import loader
@@ -59,8 +60,9 @@ def register(request):
     nickname = data.get('nickname')
     realname = data.get('realname')
     password = data.get('password')
+    gender = data.get('gender')
     verify = data.get('verify')
-    if email is None or realname is None or password is None or nickname is None or verify is None:
+    if email is None or realname is None or password is None or nickname is None or verify is None or gender is None:
         return JsonResponse({'msg': 'fail', 'error': 'wrong post parameter'}, status=500)
     if request.session['verify'] is None or verify.upper() != request.session['verify']:
         return JsonResponse({'msg': 'fail', 'error': 'wrong verify'}, status=500)
