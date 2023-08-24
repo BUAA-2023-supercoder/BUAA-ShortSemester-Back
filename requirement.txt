@@ -1,0 +1,4 @@
+--index https://pypi.tuna.tsinghua.edu.cn/simple
+djangorestframework-simplejwt
+daphne
+channels
