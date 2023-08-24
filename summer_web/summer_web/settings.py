@@ -29,6 +29,9 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
+    "chat",
+    "channels",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -89,7 +92,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'summer_web.wsgi.application'
-
+ASGI_APPLICATION='summer_web.asgi.application'
 ORS_ALLOW_ALL_ORIGINS = True
 
 # 允许的请求方法
@@ -129,7 +132,17 @@ DATABASES = {
         'PORT': '20169'
     }
 }
-
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": ["redis://:Cyx20020303@r-2zeot6vz5vh305qquipd.redis.rds.aliyuncs.com:6379/0"],
+            "symmetric_encryption_keys": ['Cyx20020303'],
+            "capacity": 2048,
+            "expiry": 60,
+        },
+    },
+}
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
