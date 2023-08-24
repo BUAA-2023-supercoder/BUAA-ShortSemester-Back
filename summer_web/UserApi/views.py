@@ -1,13 +1,8 @@
 import json
-import os
-import platform
-import string
 
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
 from django.http import JsonResponse
-from django.shortcuts import render
 from django.template import loader
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -18,10 +13,6 @@ from summer_web.settings import EMAIL_HOST_USER
 def sendEmail(option, email):
     email_title = None
     email_body = None
-    # if platform.system() == "Linux":
-    #     url = os.path.join("http://154.8.183.51/user/sending/", string)
-    # else:
-    #     url = os.path.join("http://127.0.0.1:8888/user/sending/", string)
     if option == 0:
         email_title = r"账号注册"
         email_body = loader.render_to_string('email_register.html')
@@ -67,7 +58,7 @@ def login(request):
     password = data.get('password')
     if email is None or password is None:
         return JsonResponse({'msg': 'fail', 'error': 'wrong post parameter'}, status=500)
-    user = authenticate(request, username=email, password=password)
+    user = authenticate(request, email=email, password=password)
     if user is not None:
         refresh = RefreshToken.for_user(user)
         accessToken = refresh.access_token
