@@ -21,5 +21,6 @@ from UserApi import views
 urlpatterns = [
     # path('admin/', admin.site.urls),
     path('login/', views.login),
+    path('sendemail/', views.sendEmail),
     path('register/', views.register),
 ]
