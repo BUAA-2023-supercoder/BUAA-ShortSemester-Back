@@ -7,7 +7,7 @@ GENDER_ITEMS = [
 ]
 
 # Create your models here.
-class User(models.Model):
+class UserInfo(models.Model):
     email = models.EmailField(primary_key=True, verbose_name="邮箱")
     nickname = models.CharField(max_length=128, null=False, verbose_name="昵称")
     realname = models.CharField(max_length=128, null=False, verbose_name="中文名字")
