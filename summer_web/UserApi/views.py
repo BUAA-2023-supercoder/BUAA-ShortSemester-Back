@@ -62,7 +62,7 @@ def register(request):
     password = data.get('password')
     gender = data.get('gender')
     verify = data.get('verify')
-    if email is None or realname is None or password is None or nickname is None or verify is None or gender is None:
+    if email is None or realname is None or password is None or nickname is None or verify is None:
         return JsonResponse({'msg': 'fail', 'error': 'wrong post parameter'}, status=500)
     if request.session['verify'] is None or verify.upper() != request.session['verify']:
         return JsonResponse({'msg': 'fail', 'error': 'wrong verify'}, status=500)
@@ -71,7 +71,10 @@ def register(request):
         return JsonResponse({'msg': 'fail', 'error': 'email exists'}, status=403)
     request.session['verify'] = None
     user = User.objects.create_user(username=email, password=password)
-    UserInfo.objects.create(email=email, password=password, nickname=nickname, realname=realname, user=user)
+    newInfo = UserInfo.objects.create(email=email, password=password, nickname=nickname, realname=realname, user=user)
+    if gender is not None:
+        newInfo.gender = (1 if gender == '男' else 2)
+        newInfo.save()
     return JsonResponse({'msg': 'success'}, status=200)
 
 
@@ -94,4 +97,4 @@ def login(request):
         }
         return JsonResponse(responseData, status=200)
     else:
-        return JsonResponse({'msg': 'login fail'}, status=400)
+        return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)

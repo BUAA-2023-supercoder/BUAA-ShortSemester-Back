@@ -16,12 +16,20 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from UserApi import views
+
+import TeamApi
+import UserApi
+
+from UserApi.views import *
+from TeamApi.views import *
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
-    path('login/', views.login),
-    path('sendemail/', views.sendEmail),
-    path('register/', views.register),
-    path("chat/", include("chat.urls")),
+    path('/api/login/', login),
+    path('/api/sendemail/', sendEmail),
+    path('/api/register/', register),
+    path("/api/chat/", include("chat.urls")),
+    
+    path('/api/createteam/', createTeam),
+
 ]
