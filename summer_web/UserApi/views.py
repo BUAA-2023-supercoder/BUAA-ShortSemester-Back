@@ -1,14 +1,9 @@
 import json
-import os
-import platform
 import random
-import string
 
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
 from django.http import JsonResponse
-from django.shortcuts import render
 from django.template import loader
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -86,7 +81,7 @@ def login(request):
     password = data.get('password')
     if email is None or password is None:
         return JsonResponse({'msg': 'fail', 'error': 'wrong post parameter'}, status=500)
-    user = authenticate(request, username=email, password=password)
+    user = authenticate(request, email=email, password=password)
     if user is not None:
         refresh = RefreshToken.for_user(user)
         accessToken = refresh.access_token
