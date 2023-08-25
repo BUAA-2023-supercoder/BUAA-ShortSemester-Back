@@ -25,11 +25,11 @@ from TeamApi.views import *
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
-    path('/api/login/', login),
-    path('/api/sendemail/', sendEmail),
-    path('/api/register/', register),
-    path("/api/chat/", include("chat.urls")),
+    path('api/login/', login),
+    path('api/sendemail/', sendEmail),
+    path('api/register/', register),
+    path("api/chat/", include("chat.urls")),
     
-    path('/api/createteam/', createTeam),
+    path('api/createteam/', createTeam),
 
 ]

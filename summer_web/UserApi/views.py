@@ -1,3 +1,4 @@
+import datetime
 import json
 import random
 
@@ -70,8 +71,8 @@ def register(request):
     if cnt != 0:
         return JsonResponse({'msg': 'fail', 'error': 'email exists'}, status=403)
     request.session['verify'] = None
-    user = User.objects.create_user(username=email, password=password)
-    newInfo = UserInfo.objects.create(email=email, password=password, nickname=nickname, realname=realname, user=user)
+    user = User.objects.create_user(username=email, email=email, password=password, date_joined=datetime.datetime.now())
+    newInfo = UserInfo.objects.create(email=email, nickname=nickname, realname=realname, user=user)
     if gender is not None:
         newInfo.gender = (1 if gender == '男' else 2)
         newInfo.save()
@@ -86,7 +87,7 @@ def login(request):
     password = data.get('password')
     if email is None or password is None:
         return JsonResponse({'msg': 'fail', 'error': 'wrong post parameter'}, status=500)
-    user = authenticate(request, email=email, password=password)
+    user = authenticate(request, username=email, password=password)
     if user is not None:
         refresh = RefreshToken.for_user(user)
         accessToken = refresh.access_token
