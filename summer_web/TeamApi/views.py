@@ -51,6 +51,7 @@ def setAdmin(request):
         except Team.DoesNotExist:
             return JsonResponse({'msg': 'fail', 'error': 'team does not exist'}, status=400)
 
+
 def invite(request):
     if request.method != "POST":
         return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
@@ -65,15 +66,12 @@ def invite(request):
             inviter = UserInfo.objects.get(email=getUserFromToken(accessToken))     # user
             team = Team.objects.get(id=teamId)  # team
             invitees = UserInfo.objects.get(email=email)    # user
-            # 判断邀请者的权限
             team_member = TeamMember.objects.get(member=inviter, teamID=team)
             role = team_member.role
             if role == 2:
                 return JsonResponse({'msg': 'fail', 'error': 'insufficient member permissions'}, status=400)
-            # 判断成员是否已经是团队的成员
             if team.teammember_set.filter(member=invitees).exists():
                 return JsonResponse({'msg': 'fail', 'error': 'the member is already on the team'}, status=400)
-            # 创建 TeamMember 对象将成员加入团队
             team_member = TeamMember.objects.create(member=invitees, teamID=team)
             return JsonResponse({'msg': 'success'}, status=200)
         except UserInfo.DoesNotExist:
@@ -82,6 +80,41 @@ def invite(request):
             return JsonResponse({'msg': 'fail', 'error': 'team does not exist'}, status=400)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
+
+def removeMember(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    data = json.loads(request.body)
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    decodedToken = validateAccessToken(accessToken)
+    teamId = data.get('teamID')
+    email = data.get('email')
+
+    if decodedToken:
+        try:
+            remover = UserInfo.objects.get(email=getUserFromToken(accessToken))
+            team = Team.objects.get(id=teamId)  # 团队
+            member_to_remove = UserInfo.objects.get(email=email)  # 成员
+
+            team_member = TeamMember.objects.get(member=remover, teamID=team)
+            role = team_member.role
+            if role == 2:
+                return JsonResponse({'msg': 'fail', 'error': 'insufficient member permissions'}, status=400)
+
+            if not team.teammember_set.filter(member=member_to_remove).exists():
+                return JsonResponse({'msg': 'fail', 'error': 'the member is not on the team'}, status=400)
+            if team.teammember_set.filter(member=member_to_remove,teamID=team).first().role != 2:
+                return JsonResponse({'msg': 'fail', 'error': 'can only delete putong member'}, status=400)
+            team.teammember_set.filter(member=member_to_remove).delete()
+            return JsonResponse({'msg': 'success'}, status=200)
+        except UserInfo.DoesNotExist:
+            return JsonResponse({'msg': 'fail', 'error': 'this member does not exist'}, status=400)
+        except Team.DoesNotExist:
+            return JsonResponse({'msg': 'fail', 'error': 'this team does not exist'}, status=400)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
+
 
 def getAllTeam(request):
     if request.method != "POST":
@@ -124,3 +157,4 @@ def getAllMember(request):
         return JsonResponse({'msg': 'success', 'result': result}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
+
