@@ -99,3 +99,5 @@ def login(request):
         return JsonResponse(responseData, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)
+
+

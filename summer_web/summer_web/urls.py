@@ -29,7 +29,7 @@ urlpatterns = [
     path('api/sendemail/', sendEmail),
     path('api/register/', register),
     path("api/chat/", include("chat.urls")),
-    
-    path('api/createteam/', createTeam),
+
+
 
 ]
