@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 import random
 
 from django.contrib.auth import authenticate
@@ -7,10 +8,13 @@ from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
 from django.http import JsonResponse
 from django.template import loader
+from django.utils.crypto import get_random_string
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from UserApi.models import UserInfo
+from UserApi.admin import validateAccessToken, getUserFromToken
+from UserApi.models import UserInfo, GENDER_ITEMS
 from summer_web.settings import EMAIL_HOST_USER
+from summer_web.urls import URL
 
 
 def sendEmail(request):
@@ -104,3 +108,71 @@ def login(request):
         return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)
 
 
+def setProfile(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        user = UserInfo.objects.get(email=getUserFromToken(accessToken))
+        img = request.FILES['img']
+        if user.profile.url != '/media/Profile/default.png':
+            print(user.profile.url)
+            os.remove("." + user.profile.url)
+        img.name = get_random_string(length=8) + ".jpg"
+        user.profile = img
+        user.save()
+        return JsonResponse({'msg': 'success', 'url': URL + user.profile.url}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)
+
+def getInfo(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    email = json.loads(request.body).get('email')
+    user = UserInfo.objects.get(email=email)
+    if user is None:
+        return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)
+    else:
+        info = {
+            'email': email,
+            'nickname': user.nickname,
+            'realname': user.realname,
+            'gender': GENDER_ITEMS[user.gender][1],
+            'url': URL + user.profile.url
+        }
+        return JsonResponse({'msg': 'success', 'info': info}, status=200)
+
+def changeInfo(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        user = UserInfo.objects.get(email=getUserFromToken(accessToken))
+        data = json.loads(request.body)
+        gender = data.get('gender')
+        realname = data.get('realname')
+        nickname = data.get('nickname')
+        oldPassword = data.get('old_password')
+        newPassword = data.get('new_password')
+        if oldPassword is not None:
+            if oldPassword != user.user.password:
+                return JsonResponse({'msg': 'fail', 'error': 'password incorrect'}, status=400)
+            elif newPassword is not None:
+                user.user.password = newPassword
+                user.user.save()
+        if realname is not None:
+            user.realname = realname
+        if nickname is not None:
+            user.nickname = nickname
+        if gender is not None:
+            if gender == '武装直升机':
+                user.gender = 0
+            else:
+                user.gender = 1 if gender == '男' else 2
+        user.save()
+        return JsonResponse({'msg': 'success'}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)
