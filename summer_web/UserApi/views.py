@@ -20,6 +20,9 @@ def sendEmail(request):
     email = data.get('email')
     if email is None:
         return JsonResponse({'msg': 'fail', 'error': 'wrong post parameter'}, status=500)
+    cnt = UserInfo.objects.filter(email=email).count()
+    if cnt != 0:
+        return JsonResponse({'msg': 'fail', 'error': 'email has been registered'}, status=403)
     email_title = None
     email_body = None
     # if platform.system() == "Linux":
