@@ -10,6 +10,7 @@ urlpatterns = [
     path('removemember/',views.removeMember),
     path('setadmin/', views.setAdmin),
     path('allteam/', views.getAllTeam),
-    path('allmember/', views.getAllMember)
+    path('allmember/', views.getAllMember),
+    path('sendmessage/', views.addMessage)
 
 ]

@@ -1,7 +1,7 @@
 import json
 
 from django.http import JsonResponse
-from .models import Team, TeamMember, TYPE_ITEM, ROLE_ITEM
+from .models import Team, TeamMember, TYPE_ITEM, ROLE_ITEM, TeamMessage
 from UserApi.models import UserInfo, GENDER_ITEMS
 from UserApi.admin import validateAccessToken, getUserFromToken
 
@@ -158,3 +158,39 @@ def getAllMember(request):
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
 
+def addMessage(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        data = request.POST
+        team = Team.objects.get(id=data.get('teamID'))
+        sender = UserInfo.objects.get(email=getUserFromToken(accessToken))
+        type = data.get('type')
+        newMsg = TeamMessage.objects.create(sender=sender, team=team, type=0)
+        if type == 'text':
+            if data.get('text') is None:
+                newMsg.delete()
+                return JsonResponse({'msg': 'fail', 'error': 'text is None'}, status=400)
+            newMsg.text = data.get('text')
+        elif type == 'image':
+            if request.FILES['img'] is None:
+                newMsg.delete()
+                return JsonResponse({'msg': 'fail', 'error': 'image is None'}, status=400)
+            newMsg.type = 1
+            newMsg.image = request.FILES['img']
+        elif type == 'file':
+            if request.FILES['file'] is None:
+                newMsg.delete()
+                return JsonResponse({'msg': 'fail', 'error': 'file is None'}, status=400)
+            newMsg.type = 2
+            newMsg.file = request.FILES['file']
+            newMsg.fileName = request.FILES['file'].name
+        else:
+            newMsg.delete()
+            return JsonResponse({'msg': 'fail', 'error': 'wrong message type'}, status=400)
+        newMsg.save()
+        return JsonResponse({'msg': 'success'}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)

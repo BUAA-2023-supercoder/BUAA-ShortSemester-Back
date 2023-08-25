@@ -25,8 +25,8 @@ TYPE_ITEM = [
 class TeamMessage(models.Model):
     type = models.IntegerField(choices=TYPE_ITEM, null=False)
     text = models.TextField(null=True)
-    image = models.ImageField(upload_to='Images/')
-    file = models.FileField(upload_to='Files/')
+    image = models.ImageField(upload_to='Images/', null=True)
+    file = models.FileField(upload_to='Files/', null=True)
     fileName = models.CharField(max_length=128, null=True)
     sender = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE)
     time = models.DateTimeField(auto_now_add=True)
