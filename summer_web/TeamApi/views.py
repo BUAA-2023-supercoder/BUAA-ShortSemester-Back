@@ -41,18 +41,20 @@ def setAdmin(request):
             admin = UserInfo.objects.get(email=getUserFromToken(accessToken))  # user
             # 判断管理员是否有管理权限
             # 判断邀请者的权限
+
             team_member = TeamMember.objects.get(member=admin, teamID=team)
             role = team_member.role
             if role == 2:
-                return JsonResponse({'message': '成员权限不足'}, status=400)
+                return JsonResponse({'msg': '成员权限不足'}, status=400)
             if newrole == 0:
                 return JsonResponse({'message': '不可设置为创建者'}, status=400)
-            TeamMember.objects.get(member=ordinarymember, teamID=team).update(role=newrole)
-            return JsonResponse({'message': 'success'}, status=200)
+            ordinarymember.role = newrole
+            ordinarymember.save()
+            return JsonResponse({'msg': 'success'}, status=200)
         except UserInfo.DoesNotExist:
-            return JsonResponse({'message': '成员不存在'}, status=400)
+            return JsonResponse({'msg': '成员不存在'}, status=400)
         except Team.DoesNotExist:
-            return JsonResponse({'message': '团队不存在'}, status=400)
+            return JsonResponse({'msg': '团队不存在'}, status=400)
 
 def invite(request):
     if request.method != "POST":
@@ -72,19 +74,55 @@ def invite(request):
             team_member = TeamMember.objects.get(member=inviter, teamID=team)
             role = team_member.role
             if role == 2:
-                return JsonResponse({'message': '成员权限不足'}, status=400)
+                return JsonResponse({'msg': '成员权限不足'}, status=400)
             # 判断成员是否已经是团队的成员
             if team.teammember_set.filter(member=invitees).exists():
-                return JsonResponse({'message': '该成员已经是团队的成员'}, status=400)
+                return JsonResponse({'msg': '该成员已经是团队的成员'}, status=400)
             # 创建 TeamMember 对象将成员加入团队
             team_member = TeamMember.objects.create(member=invitees, teamID=team)
-            return JsonResponse({'message': '成员成功加入团队'}, status=200)
+            return JsonResponse({'msg': '成员成功加入团队'}, status=200)
         except UserInfo.DoesNotExist:
-            return JsonResponse({'message': '成员不存在'}, status=400)
+            return JsonResponse({'msg': '成员不存在'}, status=400)
         except Team.DoesNotExist:
-            return JsonResponse({'message': '团队不存在'}, status=400)
+            return JsonResponse({'msg': '团队不存在'}, status=400)
     else:
-        return JsonResponse({'message': 'please login first'}, status=400)
+        return JsonResponse({'msg': 'please login first'})
+
+
+def remove_member(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    data = json.loads(request.body)
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    decodedToken = validateAccessToken(accessToken)
+    teamId = data.get('teamID')
+    email = data.get('email')
+
+    if decodedToken:
+        try:
+            remover = UserInfo.objects.get(email=getUserFromToken(accessToken))  # 用户
+            team = Team.objects.get(id=teamId)  # 团队
+            member_to_remove = UserInfo.objects.get(email=email)  # 成员
+
+            team_member = TeamMember.objects.get(member=remover, teamID=team)
+            role = team_member.role
+            if role == 2:
+                return JsonResponse({'msg': '成员权限不足'}, status=400)
+
+            if not team.teammember_set.filter(member=member_to_remove).exists():
+                return JsonResponse({'msg': '该成员不是团队的成员'}, status=400)
+            if team.teammember_set.filter(member=member_to_remove,teamID=team).first().role!=2:
+                return JsonResponse({'msg': '只可删除普通成员'}, status=400)
+            team.teammember_set.filter(member=member_to_remove).delete()
+            return JsonResponse({'msg': '成功从团队中删除成员'}, status=200)
+        except UserInfo.DoesNotExist:
+            return JsonResponse({'msg': '成员不存在'}, status=400)
+        except Team.DoesNotExist:
+            return JsonResponse({'msg': '团队不存在'}, status=400)
+    else:
+        return JsonResponse({'msg': 'please login first'})
+
 
 def getAllTeam(request):
     if request.method != "POST":
@@ -127,3 +165,4 @@ def getAllMember(request):
         return JsonResponse({'msg': 'success', 'result': result}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
+
