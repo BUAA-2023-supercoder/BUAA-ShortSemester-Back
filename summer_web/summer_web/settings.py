@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework',
     'UserApi.apps.UserapiConfig',
-    'TeamApi.apps.TeamapiConfig'
+    'TeamApi.apps.TeamapiConfig',
+    'ProjectApi.apps.ProjectapiConfig'
 ]
 
 from datetime import timedelta

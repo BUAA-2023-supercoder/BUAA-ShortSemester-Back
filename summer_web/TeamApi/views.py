@@ -2,8 +2,8 @@ import json
 
 from django.http import JsonResponse
 from django.shortcuts import render
-from .models import Team, TeamMember
-from UserApi.models import UserInfo
+from .models import Team, TeamMember, TYPE_ITEM, ROLE_ITEM
+from UserApi.models import UserInfo, GENDER_ITEMS
 from django.contrib.auth.models import User
 
 from UserApi.admin import validateAccessToken, getUserFromToken
@@ -23,6 +23,7 @@ def createTeam(request):
         return JsonResponse({'msg': 'success'}, status=200)
     except Exception as e:
         return JsonResponse({'msg': 'fail', 'error': str(e)}, status=500)
+
 def setAdmin(request):
     if request.method != "POST":
         return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
@@ -31,29 +32,30 @@ def setAdmin(request):
     decodedToken = validateAccessToken(accessToken)
     teamId = data.get('teamID')
     email = data.get('email')
-    newrole=data.get('role')
+    newrole = data.get('perm')
     if decodedToken:
         try:
             team = Team.objects.get(id=teamId)  # team
             user = UserInfo.objects.get(email=email)  # user
             ordinarymember = TeamMember.objects.get(member=user, teamID=team)
             admin = UserInfo.objects.get(email=getUserFromToken(accessToken))  # user
-            #判断管理员是否有管理权限
+            # 判断管理员是否有管理权限
             # 判断邀请者的权限
 
             team_member = TeamMember.objects.get(member=admin, teamID=team)
             role = team_member.role
             if role == 2:
                 return JsonResponse({'msg': '成员权限不足'}, status=400)
-
+            if newrole == 0:
+                return JsonResponse({'message': '不可设置为创建者'}, status=400)
             ordinarymember.role = newrole
             ordinarymember.save()
-
             return JsonResponse({'msg': 'success'}, status=200)
         except UserInfo.DoesNotExist:
             return JsonResponse({'msg': '成员不存在'}, status=400)
         except Team.DoesNotExist:
             return JsonResponse({'msg': '团队不存在'}, status=400)
+
 def invite(request):
     if request.method != "POST":
         return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
@@ -120,3 +122,47 @@ def remove_member(request):
             return JsonResponse({'msg': '团队不存在'}, status=400)
     else:
         return JsonResponse({'msg': 'please login first'})
+
+
+def getAllTeam(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        user = UserInfo.objects.get(email=getUserFromToken(accessToken))
+        res = TeamMember.objects.filter(member=user)
+        result = list()
+        for item in res:
+            team = {
+                "teamID": item.teamID.id,
+                "name": item.teamID.name
+            }
+            result.append(team)
+        return JsonResponse({'msg': 'success', 'result': result}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
+
+
+def getAllMember(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        teamID = json.loads(request.body).get('teamID')
+        res = TeamMember.objects.order_by('role').filter(teamID=teamID)
+        result = list()
+        for item in res:
+            member = {
+                "email": item.member.email,
+                "gender": GENDER_ITEMS[item.member.gender][1],
+                "nickname": item.member.nickname,
+                "realname": item.member.realname,
+                "role": ROLE_ITEM[item.role][1]
+            }
+            result.append(member)
+        return JsonResponse({'msg': 'success', 'result': result}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
+
