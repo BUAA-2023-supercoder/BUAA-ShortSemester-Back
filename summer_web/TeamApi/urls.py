@@ -5,5 +5,8 @@ from . import views
 
 urlpatterns = [
     path('createteam/', views.createTeam),
-    path('invitemember/', views.invite)
+    path('invitemember/', views.invite),
+    path('setadmin/', views.setAdmin),
+    path('allteam/', views.getAllTeam),
+    path('allmember/', views.getAllMember)
 ]
