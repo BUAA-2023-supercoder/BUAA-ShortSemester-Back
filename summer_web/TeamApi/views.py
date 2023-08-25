@@ -5,8 +5,8 @@ from django.shortcuts import render
 from .models import Team, TeamMember
 from UserApi.models import UserInfo
 from django.contrib.auth.models import User
-from summer_web import UserApi
-from .admin import validateAccessToken, getUserFromToken
+
+from UserApi.admin import validateAccessToken, getUserFromToken
 
 
 # Create your views here.
