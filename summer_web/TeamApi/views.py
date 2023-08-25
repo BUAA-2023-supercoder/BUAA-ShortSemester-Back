@@ -40,6 +40,10 @@ def setAdmin(request):
             admin = UserInfo.objects.get(email=getUserFromToken(accessToken))
             team_member = TeamMember.objects.get(member=admin, teamID=team)
             role = team_member.role
+            #管理员不能将成员的身份设置为普通成员
+            if role ==1 and new_role==2:
+                return JsonResponse({'msg': 'fail', 'error': 'insufficient member permissions'}, status=400)
+            #普通成员不能操作此功能
             if role == 2:
                 return JsonResponse({'msg': 'fail', 'error': 'insufficient member permissions'}, status=400)
             if new_role == 0:
@@ -99,9 +103,12 @@ def removeMember(request):
 
             team_member = TeamMember.objects.get(member=remover, teamID=team)
             role = team_member.role
+            #普通用户不能踢人^^
             if role == 2:
                 return JsonResponse({'msg': 'fail', 'error': 'insufficient member permissions'}, status=400)
-
+            #管理员只能踢普通成员
+            if role ==1 and TeamMember.objects.get(member=member_to_remove, teamID=team).first().role!=2:
+                return JsonResponse({'msg': 'fail', 'error': 'insufficient member permissions'}, status=400)
             if not team.teammember_set.filter(member=member_to_remove).exists():
                 return JsonResponse({'msg': 'fail', 'error': 'the member is not on the team'}, status=400)
             if team.teammember_set.filter(member=member_to_remove,teamID=team).first().role != 2:
