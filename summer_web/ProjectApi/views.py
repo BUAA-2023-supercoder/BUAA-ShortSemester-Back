@@ -15,7 +15,7 @@ def getProjectList(request):
     if notAnonymous(request) is False:
         return JsonResponse({'msg': 'fail', 'error': 'login first please'}, status=401)
     data = json.loads(request.body)
-    team = Team.objects.filter(team_id=data.get('teamId'))
+    team = Team.objects.filter(id=data.get('teamId'))
     if not team:
         return JsonResponse({'msg': 'fail', 'error': 'team not exits'}, status=404)
     # 判断用户是否在该team中
@@ -23,7 +23,7 @@ def getProjectList(request):
     userInfo = UserInfo.objects.filter(user=user)
     if not TeamMember.objects.filter(teamID=team, member=userInfo):
         return JsonResponse({'msg': 'fail', 'error': 'user not in the team'}, status=404)
-    projects = Project.objects.filter(team=team).values('project_id', 'projectName')
+    projects = Project.objects.filter(team=team).values('id', 'projectName')
     return JsonResponse({'projects': list(projects)})
 
 
@@ -36,7 +36,7 @@ def createProject(request):
     if notAnonymous(request) is False:
         return JsonResponse({'msg': 'fail', 'error': 'login first please'}, status=401)
 
-    team = Team.objects.filter(team_id=data.get('teamId'))
+    team = Team.objects.filter(id=data.get('teamId'))
     if not team:
         return JsonResponse({'msg': 'fail', 'error': 'team not exits'}, status=404)
     # 判断用户是否在该team中
@@ -58,7 +58,7 @@ def renameProject(request):
     if notAnonymous(request) is False:
         return JsonResponse({'msg': 'fail', 'error': 'login first please'}, status=401)
 
-    team = Team.objects.filter(team_id=data.get('teamId'))
+    team = Team.objects.filter(id=data.get('teamId'))
     if not team:
         return JsonResponse({'msg': 'fail', 'error': 'team not exits'}, status=404)
     # 判断用户是否在该team中
@@ -67,7 +67,7 @@ def renameProject(request):
     if not TeamMember.objects.filter(teamID=team, member=userInfo):
         return JsonResponse({'msg': 'fail', 'error': 'user not in the team'}, status=404)
     try:
-        cnt = Project.objects.filter(project_id=data.get('projectId')).update(projectName=data.get('projectName'))
+        cnt = Project.objects.filter(id=data.get('projectId')).update(projectName=data.get('projectName'))
         if not cnt:
             return JsonResponse({'msg': 'fail', 'error': 'wrong projectId'}, status=400)
         else:
@@ -83,7 +83,7 @@ def deleteProject(request):
     if notAnonymous(request) is False:
         return JsonResponse({'msg': 'fail', 'error': 'login first please'}, status=401)
 
-    team = Team.objects.filter(team_id=data.get('teamId'))
+    team = Team.objects.filter(id=data.get('teamId'))
     if not team:
         return JsonResponse({'msg': 'fail', 'error': 'team not exits'}, status=404)
     # 判断用户是否在该team中
@@ -92,7 +92,7 @@ def deleteProject(request):
     if not TeamMember.objects.filter(teamID=team, member=userInfo):
         return JsonResponse({'msg': 'fail', 'error': 'user not in the team'}, status=404)
     try:
-        cnt = Project.objects.filter(project_id=data.get('projectId')).update(isDelete=True)
+        cnt = Project.objects.filter(id=data.get('projectId')).update(isDelete=True)
         if not cnt:
             return JsonResponse({'msg': 'fail', 'error': 'wrong projectId'}, status=400)
         else:
