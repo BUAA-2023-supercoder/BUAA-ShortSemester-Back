@@ -17,19 +17,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-import TeamApi
-import UserApi
-
-from UserApi.views import *
-from TeamApi.views import *
 
 urlpatterns = [
-    # path('admin/', admin.site.urls),
-    path('api/login/', login),
-    path('api/sendemail/', sendEmail),
-    path('api/register/', register),
+    path('admin/', admin.site.urls),
     path("api/chat/", include("chat.urls")),
 
-
-
+    path("api/", include("UserApi.urls")),
+    path("api/", include("TeamApi.urls")),
 ]

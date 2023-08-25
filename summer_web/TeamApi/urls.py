@@ -1,10 +1,9 @@
 from django.urls import path, include
 
 
-import views
-urlpatterns = [
-    # path('admin/', admin.site.urls),
+from . import views
 
-    path('api/createteam/', views.createTeam),
-    path('api/invitemember/',views.invite)
+urlpatterns = [
+    path('createteam/', views.createTeam),
+    path('invitemember/', views.invite)
 ]

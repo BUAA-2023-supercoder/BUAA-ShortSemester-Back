@@ -24,27 +24,30 @@ def createTeam(request):
     except Exception as e:
         return JsonResponse({'msg': 'fail', 'error': str(e)}, status=500)
 def setAdmin(request):
-    if request.method!="POST":
+    if request.method != "POST":
         return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
-    data=json.loads(request.body)
+    data = json.loads(request.body)
 
 def invite(request):
-    if request.method!="POST":
+    if request.method != "POST":
         return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
-    data=json.loads(request.body)
+
+    data = json.loads(request.body)
     accessToken = request.headers.get('Authorization').split(' ')[1]
     decodedToken = validateAccessToken(accessToken)
-    teamId=data.get['teamId']
-    email=data.get['email']
+    teamId = data.get('teamID')
+    email = data.get('email')
     if decodedToken:
         try:
-            inviter=getUserFromToken(accessToken) #user
-            team=Team.objects.get(id=teamId) #team
-            invitees=User.objects.get(email=email) #user
-            #判断邀请者的权限
-            team_member = TeamMember.objects.get(member=inviter,teamID=team)
+            inviter = UserInfo.objects.get(email=getUserFromToken(accessToken))     # user
+            team = Team.objects.get(id=teamId)  # team
+            invitees = UserInfo.objects.get(email=email)    # user
+            # 判断邀请者的权限
+            print(inviter)
+            team_member = TeamMember.objects.get(member=inviter, teamID=team)
+            print(inviter)
             role = team_member.role
-            if role==2:
+            if role == 2:
                 return JsonResponse({'message': '成员权限不足'}, status=400)
             # 判断成员是否已经是团队的成员
             if team.teammember_set.filter(member=invitees).exists():
@@ -52,9 +55,10 @@ def invite(request):
             # 创建 TeamMember 对象将成员加入团队
             team_member = TeamMember.objects.create(member=invitees, teamID=team)
             return JsonResponse({'message': '成员成功加入团队'}, status=200)
-        except UserApi.UserInfo.DoesNotExist:
+        except UserInfo.DoesNotExist:
             return JsonResponse({'message': '成员不存在'}, status=400)
         except Team.DoesNotExist:
             return JsonResponse({'message': '团队不存在'}, status=400)
     else:
         return JsonResponse({'message': 'please login first'})
+    
