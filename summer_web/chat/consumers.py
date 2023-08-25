@@ -3,6 +3,8 @@ import json
 import base64
 from channels.generic.websocket import AsyncWebsocketConsumer
 
+from summer_web.urls import URL
+
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -26,31 +28,33 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def handle_image_message(self, text_data):
-        image_data = json.loads(text_data)["image"]
-        try:
-            # 检查字符串长度是否是 4 的倍数
-            padding = len(image_data) % 4
-            if padding > 0:
-                image_data += '=' * (4 - padding)
-
-            # 进行 Base64 解码
-            image_binary = base64.b64decode(image_data)
-            # 处理解码后的图像数据
-        except binascii.Error as e:
-            print("Base64 解码错误:", str(e))
-        # Send image to room group
+        text_data_json = json.loads(text_data)
+        message = text_data_json['message']
+        name = message.split('$$$')[2]
         await self.channel_layer.group_send(
-            self.room_group_name, {'type': 'chat.image', "image": image_binary}
+            self.room_group_name, {'type': 'chat.message', "message": URL + '/media/Images/' + name}
+        )
+
+    async def handle_file_message(self, text_data):
+        text_data_json = json.loads(text_data)
+        message = text_data_json['message']
+        name = message.split('$$$')[2]
+        await self.channel_layer.group_send(
+            self.room_group_name, {'type': 'chat.message', "message": URL + '/media/Files/' + name}
         )
 
     # Receive message from WebSocket
     async def receive(self, text_data):
         data = json.loads(text_data)
+        print(data)
 
-        if "image" in data:
-            # Handle image message
+        if "$$$Images$$$" in data['message']:
             print('is image')
             await self.handle_image_message(text_data)
+
+        elif "$$$Files$$$" in data['message']:
+            print('is Files')
+            await self.handle_file_message(text_data)
 
         else:
             print('is text')
@@ -63,7 +67,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Send message to WebSocket
         await self.send(text_data=json.dumps({"message": message}))
 
-    async def chat_image(self, event):
-        image = event["image"]
-        # Send image to WebSocket
-        await self.send(bytes_data=image)
+    # async def chat_image(self, event):
+    #     image = event["image"]
+    #     # Send image to WebSocket
+    #     await self.send(bytes_data=image)

@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from django.utils.crypto import get_random_string
 
 from summer_web.urls import URL
-from .models import Team, TeamMember, TYPE_ITEM, ROLE_ITEM, TeamMessage
+from .models import Team, TeamMember, TYPE_ITEM, ROLE_ITEM, TeamMessage, AtMessage
 from UserApi.models import UserInfo, GENDER_ITEMS
 from UserApi.admin import validateAccessToken, getUserFromToken
 
@@ -207,7 +207,6 @@ def addMessage(request):
         sender = UserInfo.objects.get(email=getUserFromToken(accessToken))
         type = data.get('type')
         newMsg = TeamMessage.objects.create(sender=sender, team=team, type=0)
-        strAfter = None
         if type == 'text':
             if data.get('text') is None:
                 newMsg.delete()
@@ -222,7 +221,7 @@ def addMessage(request):
             image = request.FILES['img']
             image.name = get_random_string(length=8) + ".jpg"
             newMsg.image = image
-            strAfter = 'xxxxxx'
+            strAfter = '$$$' + 'Images' + '$$$' + image.name + '$$$'
         elif type == 'file':
             if request.FILES['file'] is None:
                 newMsg.delete()
@@ -230,10 +229,52 @@ def addMessage(request):
             newMsg.type = 2
             newMsg.file = request.FILES['file']
             newMsg.fileName = request.FILES['file'].name
+            strAfter = '$$$' + 'Files' + '$$$' + newMsg.fileName + '$$$'
         else:
             newMsg.delete()
             return JsonResponse({'msg': 'fail', 'error': 'wrong message type'}, status=400)
         newMsg.save()
+        return JsonResponse({'msg': 'success', 'str': strAfter, 'ID': newMsg.id}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
+
+
+def messageAt(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        data = json.loads(request.body)
+        member = UserInfo.objects.get(email=data.get('email'))
+        team = Team.objects.get(id=data.get('teamID'))
+        message = TeamMessage.objects.get(id=data.get('msgID'))
+        if member is None or team is None or message is None or team != message.team:
+            return JsonResponse({'msg': ' fail', 'error': 'wrong info'}, status=400)
+        if AtMessage.objects.filter(teamMessage=message, team=team, member=member).count() == 0:
+            AtMessage.objects.create(member=member, team=team, teamMessage=message)
         return JsonResponse({'msg': 'success'}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
+
+def getAtMessage(request):   # not test
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        user = UserInfo.objects.get(email=getUserFromToken(accessToken))
+        res = AtMessage.objects.order_by('teamMessage__time').filter(member=user)
+        result = list()
+        for item in res:
+            info = {
+                'teamID': item.team.id,
+                'text': item.teamMessage.text,
+                'time': item.teamMessage.time,
+                'who': item.teamMessage.sender
+            }
+            result.append(info)
+        return JsonResponse({'msg': 'success', 'result': result}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
+    # to do
