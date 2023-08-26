@@ -314,6 +314,7 @@ def skipToAtPosition(request):  # not test
                     'realname': item.sender.realname
                 },
                 'teamID': item.team.id,
+                'messageID': item.id,
                 'time': item.time.strftime("%Y-%m-%d %H:%M:%S"),
                 'type': TYPE_ITEM[item.type][1],
                 'message': message
@@ -329,5 +330,55 @@ def getHistory(request):
 
     accessToken = request.headers.get('Authorization').split(' ')[1]
     if validateAccessToken(accessToken):
-        print('孙子出题，儿子看，老子真不会')
-        return
+        ID = json.loads(request.body).get('ID')
+        endMessage = TeamMessage.objects.get(id=ID)
+        if endMessage is None:
+            return JsonResponse({'msg': 'fail', 'error': 'messageID wrong'}, status=400)
+        earlier = TeamMessage.objects.filter(Q(team=endMessage.team) & Q(time__lt=endMessage.time)).order_by('time')
+        sz = len(earlier)
+        earlier = list(earlier)
+        result = list()
+        begin = max(0, sz - 50)
+        for idx in range(begin, sz):
+            item = earlier[idx]
+            message = item.text
+            if item.type == 1:
+                message = URL + item.image.url
+            elif item.type == 2:
+                message = URL + item.file.url
+            info = {
+                'sender': {
+                    'email': item.sender.email,
+                    'profile': URL + item.sender.profile.url,
+                    'nickname': item.sender.nickname,
+                    'realname': item.sender.realname
+                },
+                'teamID': item.team.id,
+                'messageID': item.id,
+                'time': item.time.strftime("%Y-%m-%d %H:%M:%S"),
+                'type': TYPE_ITEM[item.type][1],
+                'message': message
+            }
+            result.append(info)
+        return JsonResponse({'msg': 'success', 'chatHistory': result}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
+
+
+def deleteAtMsg(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        ID = json.loads(request.body).get('ID')
+        user = UserInfo.objects.get(email=getUserFromToken(accessToken))
+        atMsg = AtMessage.objects.get(id=ID)
+        if user != atMsg.member:
+            return JsonResponse({'msg': 'fail', 'error': 'that record is not yours'}, status=400)
+        if atMsg is None:
+            return JsonResponse({'msg': 'fail', 'error': 'ID does not exist'}, status=400)
+        atMsg.delete()
+        return JsonResponse({'msg': 'success'}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
