@@ -213,7 +213,7 @@ def addMessage(request):
                 newMsg.delete()
                 return JsonResponse({'msg': 'fail', 'error': 'text is None'}, status=400)
             newMsg.text = data.get('text')
-            strAfter = data.get('text') + '@$%' + newMsg.id
+            strAfter = data.get('text') + '@$%' + str(newMsg.id)
         elif type == 'image':
             if request.FILES['img'] is None:
                 newMsg.delete()
@@ -222,7 +222,7 @@ def addMessage(request):
             image = request.FILES['img']
             image.name = get_random_string(length=8) + ".jpg"
             newMsg.image = image
-            strAfter = '$$$' + 'Images' + '$$$' + image.name + '@$%' + newMsg.id
+            strAfter = '$$$' + 'Images' + '$$$' + image.name + '@$%' + str(newMsg.id)
         elif type == 'file':
             if request.FILES['file'] is None:
                 newMsg.delete()
@@ -230,7 +230,7 @@ def addMessage(request):
             newMsg.type = 2
             newMsg.file = request.FILES['file']
             newMsg.fileName = request.FILES['file'].name
-            strAfter = '$$$' + 'Files' + '$$$' + newMsg.fileName + '@$%' + newMsg.id
+            strAfter = '$$$' + 'Files' + '$$$' + newMsg.fileName + '@$%' + str(newMsg.id)
         else:
             newMsg.delete()
             return JsonResponse({'msg': 'fail', 'error': 'wrong message type'}, status=400)
@@ -258,7 +258,7 @@ def messageAt(request):
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
 
-def getAtMessage(request):   # not test
+def getAtMessage(request):
     if request.method != "POST":
         return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
 

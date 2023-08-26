@@ -14,5 +14,6 @@ urlpatterns = [
     path('sendmessage/', views.addMessage),
     path('seteamprofile/', views.setTeamProfile),
     path('messageat/', views.messageAt),
-    path('getatmessage/', views.getAtMessage)
+    path('getatmessage/', views.getAtMessage),
+    path('skiptoatinteam/', views.skipToAtPosition)
 ]
