@@ -1,7 +1,6 @@
 import json
 import random
 from django.http import JsonResponse
-from django.shortcuts import render
 
 from ProjectApi.models import Project, PrototypePage
 from TeamApi.models import Team, TeamMember
