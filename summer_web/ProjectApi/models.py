@@ -23,6 +23,8 @@ class PrototypePage(models.Model):
     lastEditTime = models.DateTimeField(auto_now_add=True)
     lastEditPerson = models.EmailField(null=True)
     onEdit = models.BooleanField(default=True)
+    height = models.IntegerField(default=400)
+    width = models.IntegerField(default=200)
 
 class ShareLink(models.Model):
     str = models.CharField(primary_key=True, max_length=128)
