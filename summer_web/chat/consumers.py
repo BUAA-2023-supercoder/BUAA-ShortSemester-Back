@@ -5,7 +5,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 
 from TeamApi.models import TeamMessage
 from summer_web.urls import URL
-
+from asgiref.sync import sync_to_async
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -22,10 +22,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
     async def handle_text_message(self, text_data):
+        print("开始解析text")
+
         text_data_json = json.loads(text_data)
+        print(text_data_json)
         message = text_data_json['message']
         name = message.split('@$%')[0]
         ID = message.split('@$%')[1]
+        print(name,ID)
         await self.channel_layer.group_send(
             self.room_group_name, {
                 'type': 'chat.message',
@@ -63,7 +67,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # Receive message from WebSocket
     async def receive(self, text_data):
         data = json.loads(text_data)
-        print(data)
 
         if "$$$Images$$$" in data['message']:
             print('is image')
@@ -81,21 +84,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def chat_message(self, event):
         message = event["message"]
         ID = event["messageID"]
-        msg = TeamMessage.objects.get(id=ID)
+        msg = await sync_to_async(TeamMessage.objects.get)(id=ID)
         sender = {
-            "email": msg.sender.email,
+            "email": await sync_to_async(lambda: msg.sender.email)(),
             "profile": URL + msg.sender.profile.url,
-            "nickname": msg.sender.nickname,
-            "realname": msg.sender.realname
+            "nickname": await sync_to_async(lambda: msg.sender.nickname)(),
+            "realname": await sync_to_async(lambda: msg.sender.realname)(),
         }
 
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
-                            "message": message,
+                            "msg": message,
                             "type": msg.type,
-                            "time": msg.time,
+                            "time": msg.time.strftime("%Y-%m-%d %H:%M:%S"),
                             "sender": sender,
-                            "teamID": msg.team.id
+                            "teamID": await sync_to_async(lambda: msg.team.id)()
         }))
 
     # async def chat_image(self, event):

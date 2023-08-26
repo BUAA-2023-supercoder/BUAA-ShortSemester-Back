@@ -6,7 +6,7 @@ import random
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.template import loader
 from django.utils.crypto import get_random_string
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -18,10 +18,11 @@ from summer_web.urls import URL
 
 
 def sendEmail(request):
-    if request.method != "POST":
+    if request.method != "POST" and request.method!='OPTIONS':
         return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
     data = json.loads(request.body)
     email = data.get('email')
+
     if email is None:
         return JsonResponse({'msg': 'fail', 'error': 'wrong post parameter'}, status=500)
     cnt = UserInfo.objects.filter(email=email).count()
@@ -51,6 +52,7 @@ def sendEmail(request):
         send_status = msg.send()
         if send_status == 1:
             request.session['verify'] = verify
+            print(request.session['verify'])
             request.session.set_expiry(60 * 60 * 24)
             return JsonResponse({'msg': 'success'}, status=200)
         else:
@@ -61,6 +63,9 @@ def sendEmail(request):
 
 # Create your views here.
 def register(request):
+    print("123")
+    # 设置允许访问的域
+    print(request.session['verify'])
     if request.method != "POST":
         return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
     data = json.loads(request.body)
@@ -70,6 +75,7 @@ def register(request):
     password = data.get('password')
     gender = data.get('gender')
     verify = data.get('verify')
+
     if email is None or realname is None or password is None or nickname is None or verify is None:
         return JsonResponse({'msg': 'fail', 'error': 'wrong post parameter'}, status=500)
     if request.session['verify'] is None or verify.upper() != request.session['verify']:
@@ -92,6 +98,7 @@ def login(request):
     data = json.loads(request.body)
     email = data.get('email')
     password = data.get('password')
+    print(email,password)
     if email is None or password is None:
         return JsonResponse({'msg': 'fail', 'error': 'wrong post parameter'}, status=500)
     user = authenticate(request, username=email, password=password)
@@ -101,8 +108,10 @@ def login(request):
         responseData = {
             'refresh': str(refresh),
             'access': str(accessToken),
-            'msg': 'success'
+            'msg': 'success',
+            'userID':user.id
         }
+
         return JsonResponse(responseData, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)

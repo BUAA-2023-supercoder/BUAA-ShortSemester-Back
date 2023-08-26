@@ -202,17 +202,20 @@ def addMessage(request):
 
     accessToken = request.headers.get('Authorization').split(' ')[1]
     if validateAccessToken(accessToken):
+
         data = request.POST
         team = Team.objects.get(id=data.get('teamID'))
         sender = UserInfo.objects.get(email=getUserFromToken(accessToken))
         type = data.get('type')
         newMsg = TeamMessage.objects.create(sender=sender, team=team, type=0)
         if type == 'text':
+
             if data.get('text') is None:
                 newMsg.delete()
                 return JsonResponse({'msg': 'fail', 'error': 'text is None'}, status=400)
+
             newMsg.text = data.get('text')
-            strAfter = data.get('text') + '@$%' + newMsg.id
+            strAfter = data.get('text') + '@$%' + str(newMsg.id)
         elif type == 'image':
             if request.FILES['img'] is None:
                 newMsg.delete()
