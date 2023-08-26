@@ -93,7 +93,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
                             "message": message,
                             "type": msg.type,
-                            "time": msg.time,
+                            "time": msg.time.strftime("%Y-%m-%d %H:%M:%S"),
                             "sender": sender,
                             "teamID": msg.team.id
         }))

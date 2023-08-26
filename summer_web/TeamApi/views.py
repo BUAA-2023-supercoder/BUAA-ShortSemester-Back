@@ -1,6 +1,7 @@
 import json
 import os
 
+from django.db.models import Q
 from django.http import JsonResponse
 from django.utils.crypto import get_random_string
 
@@ -268,13 +269,65 @@ def getAtMessage(request):   # not test
         result = list()
         for item in res:
             info = {
+                'ID': item.id,
                 'teamID': item.team.id,
                 'text': item.teamMessage.text,
-                'time': item.teamMessage.time,
-                'who': item.teamMessage.sender
+                'time': item.teamMessage.time.strftime("%Y-%m-%d %H:%M:%S"),
+                'who': {
+                    'email': item.teamMessage.sender.email,
+                    'profile': URL + item.teamMessage.sender.profile.url,
+                    'nickname': item.teamMessage.sender.nickname,
+                    'realname': item.teamMessage.sender.realname
+                }
             }
             result.append(info)
         return JsonResponse({'msg': 'success', 'result': result}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
-    # to do
+
+
+def skipToAtPosition(request):  # not test
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        user = UserInfo.objects.get(email=getUserFromToken(accessToken))
+        atID = json.loads(request.body).get('ID')
+        atMessage = AtMessage.objects.get(id=atID)
+        if atMessage.member != user:
+            return JsonResponse({'msg': 'fail', 'error': 'information error, please check your database'}, status=400)
+        time = atMessage.teamMessage.time
+        msg = TeamMessage.objects.filter(Q(team=atMessage.team) & Q(time__gte=time)).order_by('time')
+        msgList = list()
+        for item in msg:
+            message = item.text
+            if item.type == 1:
+                message = URL + item.image.url
+            elif item.type == 2:
+                message = URL + item.file.url
+            info = {
+                'sender': {
+                    'email': item.sender.email,
+                    'profile': URL + item.sender.profile.url,
+                    'nickname': item.sender.nickname,
+                    'realname': item.sender.realname
+                },
+                'teamID': item.team.id,
+                'time': item.time.strftime("%Y-%m-%d %H:%M:%S"),
+                'type': TYPE_ITEM[item.type][1],
+                'message': message
+            }
+            msgList.append(info)
+        return JsonResponse({'msg': 'success', 'chatHistory': msgList}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
+
+def getHistory(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        print('孙子出题，儿子看，老子真不会')
+        return
