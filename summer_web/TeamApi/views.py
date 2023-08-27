@@ -198,10 +198,12 @@ def getAllMember(request):
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
 
 def addMessage(request):
+    print("addmessage开始")
     if request.method != "POST":
         return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
-
+    print("消息验证")
     accessToken = request.headers.get('Authorization').split(' ')[1]
+    print("开始处理消息")
     if validateAccessToken(accessToken):
 
         data = request.POST

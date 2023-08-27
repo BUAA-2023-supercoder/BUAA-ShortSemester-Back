@@ -86,19 +86,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
         ID = event["messageID"]
         msg = await sync_to_async(TeamMessage.objects.get)(id=ID)
         sender = {
-            "email": await sync_to_async(lambda: msg.sender.email)(),
+            "id": await sync_to_async(lambda: msg.sender.email)(),
             "profile": URL + msg.sender.profile.url,
             "nickname": await sync_to_async(lambda: msg.sender.nickname)(),
             "realname": await sync_to_async(lambda: msg.sender.realname)(),
         }
-
+        receiver ={
+            "name":await sync_to_async(lambda: msg.team.name)(),
+            "id": str(await sync_to_async(lambda: msg.team.id)())
+        }
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
+                            "group":True,
                             "msg": message,
                             "type": msg.type,
                             "time": msg.time.strftime("%Y-%m-%d %H:%M:%S"),
                             "sender": sender,
-                            "teamID": await sync_to_async(lambda: msg.team.id)()
+                            "receiver": receiver
         }))
 
     # async def chat_image(self, event):
