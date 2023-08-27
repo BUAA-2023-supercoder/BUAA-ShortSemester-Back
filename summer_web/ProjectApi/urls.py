@@ -1,11 +1,10 @@
 from django.urls import path, include
-
-
-from . import views
+from . import projects
 
 urlpatterns = [
-    path('getprojects/', views.getProjectList),
-    path('createproject/', views.createProject),
-    path('deleteproject/', views.deleteProject),
-    path('renameproject/', views.renameProject),
+    path('getprojects/', projects.getProjectList),
+    path('createproject/', projects.createProject),
+    path('deleteproject/', projects.changeProjectStatus),
+    path('renameproject/', projects.renameProject),
+    path('getdeletedproject/', projects.getDeletedProject)
 ]

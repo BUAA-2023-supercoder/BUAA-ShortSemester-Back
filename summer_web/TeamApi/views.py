@@ -53,7 +53,8 @@ def setAdmin(request):
                 return JsonResponse({'msg': 'fail', 'error': 'insufficient member permissions'}, status=400)
             if new_role == 0:
                 return JsonResponse({'msg': 'fail', 'error': 'can not be set as creator'}, status=400)
-            TeamMember.objects.get(member=ordinaryMember, teamID=team).update(role=new_role)
+            ordinaryMember.role = new_role
+            ordinaryMember.save()
             return JsonResponse({'msg': 'success'}, status=200)
         except UserInfo.DoesNotExist:
             return JsonResponse({'msg': 'fail', 'error': 'member does not exist'}, status=400)
