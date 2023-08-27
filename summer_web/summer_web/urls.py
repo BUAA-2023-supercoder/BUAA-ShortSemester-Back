@@ -21,7 +21,7 @@ from django.conf.urls.static import static
 from summer_web import settings
 
 # URL = '127.0.0.1:8088'
-URL = '154.8.183.51'
+URL = 'http://154.8.183.51/api'
 
 
 urlpatterns = [
@@ -33,4 +33,5 @@ urlpatterns = [
     path("api/", include("ProjectApi.urls")),
 ]
 
+urlpatterns += static('api' + settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

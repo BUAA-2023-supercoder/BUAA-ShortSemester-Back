@@ -27,7 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["154.8.183.51", "127.0.0.1"]
 
-MEDIA_URL = 'api/media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Application definition

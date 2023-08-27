@@ -64,6 +64,7 @@ def createProject(request):
                                          image='ProjectProfile/' + str(num) + '.jpg')
         page = PrototypePage.objects.create(project=project,
                                             prototypeName='untitled',
+                                            lastEditPerson=getUserFromToken(accessToken),
                                             context="",
                                             height=height,
                                             width=width)
@@ -120,7 +121,9 @@ def getDeletedProject(request):
         data = json.loads(request.body)
         teamID = data.get('teamID')
         result = list()
+
         projects = Project.objects.all()
+
         for item in projects:
             if item.isDelete is True and item.team.id == teamID:
                 info = {
@@ -130,7 +133,7 @@ def getDeletedProject(request):
                     'profile': URL + item.image.url
                 }
                 result.append(info)
-        return JsonResponse({'msg': 'success', 'projects': result}, statu=200)
+        return JsonResponse({'msg': 'success', 'projects': result}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'login first please'}, status=400)
 
@@ -153,7 +156,7 @@ def getProjectInfo(request):
             info = {
                 'docID': item.id,
                 'name': item.documentName,
-                'lastEditTime': item.lastEditTime,
+                'lastEditTime': item.lastEditTime.strftime("%Y-%m-%d %H:%M:%S"),
                 'lastEditPerson': item.lastEditPerson
             }
             docInfo.append(info)
@@ -161,7 +164,7 @@ def getProjectInfo(request):
                              'pagesInfo': {
                                  'pageID': page.id,
                                  'name': page.prototypeName,
-                                 'lastEditTime': page.lastEditTime,
+                                 'lastEditTime': page.lastEditTime.strftime("%Y-%m-%d %H:%M:%S"),
                                  'lastEditPerson': page.lastEditPerson,
                                  'onEdit':  page.onEdit,
                                  'height': page.height,

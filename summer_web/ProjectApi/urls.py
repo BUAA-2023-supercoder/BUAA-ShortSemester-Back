@@ -6,5 +6,6 @@ urlpatterns = [
     path('createproject/', projects.createProject),
     path('deleteproject/', projects.changeProjectStatus),
     path('renameproject/', projects.renameProject),
-    path('getdeletedproject/', projects.getDeletedProject)
+    path('getdeletedproject/', projects.getDeletedProject),
+    path('getprojectinfo/', projects.getProjectInfo)
 ]
