@@ -105,6 +105,7 @@ def getDoc(request):
         if TeamMember.objects.filter(member=user, teamID=doc.project.team).count() == 0:
             return JsonResponse({'msg': 'fail', 'error': 'you can no permission'}, status=400)
         return JsonResponse({'msg': 'success',
+                             'teamID': doc.project.team.id,
                              'doc': {
                                  'docID': doc.id,
                                  'context': doc.context,
@@ -132,3 +133,5 @@ def getDocFromShare(request, shareCode):
                              'context': link.document.context,
                              'name': link.document.documentName
                          }}, status=200)
+
+def atDoc()
