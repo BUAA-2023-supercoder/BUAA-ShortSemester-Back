@@ -27,6 +27,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         print(text_data_json)
         message = text_data_json['message']
+        print(message)
         name = message.split('@$%')[0]
         ID = message.split('@$%')[1]
         print(name,ID)
