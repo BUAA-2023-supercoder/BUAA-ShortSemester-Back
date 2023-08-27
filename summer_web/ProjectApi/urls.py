@@ -10,4 +10,8 @@ urlpatterns = [
     path('getprojectinfo/', projects.getProjectInfo),
 
     path('createdoc/', docs.createDoc),
+    path('createsharelink/', docs.createShareLink),
+    path('getdoc/', docs.getDoc),
+    path('getsharedoc/<str:shareCode>', docs.getDocFromShare),
+    path('savedoc/', docs.saveDoc)
 ]

@@ -30,5 +30,4 @@ class ShareLink(models.Model):
     str = models.CharField(primary_key=True, max_length=128)
     document = models.ForeignKey('Document', on_delete=models.CASCADE)
     isWrite = models.BooleanField(default=False)
-    createTime = models.DateTimeField(auto_now_add=True)
     validity = models.DateTimeField(null=True)

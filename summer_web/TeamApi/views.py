@@ -106,11 +106,11 @@ def invite(request):
             if role == 2:
                 return JsonResponse({'msg': 'fail', 'error': 'insufficient member permissions'}, status=400)
             if team.teammember_set.filter(member=invitees).exists():
-                return JsonResponse({'msg': 'fail', 'error': 'the member is already on the team'}, status=400)
+                return JsonResponse({'msg': 'fail', 'error': 'the member is already on the team'}, status=200)
             team_member = TeamMember.objects.create(member=invitees, teamID=team)
             return JsonResponse({'msg': 'success'}, status=200)
         except UserInfo.DoesNotExist:
-            return JsonResponse({'msg': 'fail', 'error': 'member does not exist'}, status=400)
+            return JsonResponse({'msg': 'fail', 'error': 'member does not exist'}, status=200)
         except Team.DoesNotExist:
             return JsonResponse({'msg': 'fail', 'error': 'team does not exist'}, status=400)
     else:
