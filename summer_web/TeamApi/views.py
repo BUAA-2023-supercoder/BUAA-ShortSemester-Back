@@ -53,7 +53,8 @@ def setAdmin(request):
                 return JsonResponse({'msg': 'fail', 'error': 'insufficient member permissions'}, status=400)
             if new_role == 0:
                 return JsonResponse({'msg': 'fail', 'error': 'can not be set as creator'}, status=400)
-            TeamMember.objects.get(member=ordinaryMember, teamID=team).update(role=new_role)
+            ordinaryMember.role = new_role
+            ordinaryMember.save()
             return JsonResponse({'msg': 'success'}, status=200)
         except UserInfo.DoesNotExist:
             return JsonResponse({'msg': 'fail', 'error': 'member does not exist'}, status=400)
@@ -328,6 +329,44 @@ def skipToAtPosition(request):  # not test
         return JsonResponse({'msg': 'success', 'chatHistory': msgList}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
+
+def getLateHistory(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        teamID = json.loads(request.body).get('teamID')
+        team = Team.objects.get(id=teamID)
+        if team is None:
+            return JsonResponse({'msg': 'fail', 'error': 'teamID does not exist'}, status=400)
+        records = list(TeamMessage.objects.filter(team=team).order_by('time'))
+        result = list()
+        for idx in range(max(0, len(records) - 50), len(records)):
+            item = records[idx]
+            message = item.text
+            if item.type == 1:
+                message = URL + item.image.url
+            elif item.type == 2:
+                message = URL + item.file.url
+            info = {
+                'sender': {
+                    'email': item.sender.email,
+                    'profile': URL + item.sender.profile.url,
+                    'nickname': item.sender.nickname,
+                    'realname': item.sender.realname
+                },
+                'teamID': item.team.id,
+                'messageID': item.id,
+                'time': item.time.strftime("%Y-%m-%d %H:%M:%S"),
+                'type': TYPE_ITEM[item.type][1],
+                'message': message
+            }
+            result.append(info)
+        return JsonResponse({'msg': 'success', 'chatHistory': result}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
+
 
 def getHistory(request):
     if request.method != "POST":
