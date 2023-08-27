@@ -24,11 +24,10 @@ from summer_web import settings
 URL = 'http://154.8.183.51/api'
 
 
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/chat/", include("chat.urls")),
-    path("api/person",include("chat.urls")),
+    path("api/person", include("chat.urls")),
     path("api/", include("UserApi.urls")),
     path("api/", include("TeamApi.urls")),
     path("api/", include("ProjectApi.urls")),
