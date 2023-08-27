@@ -36,16 +36,18 @@ def saveDoc(request):
         return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
 
     data = json.loads(request.body)
-    context = data.get('context')
-    person = data.get('email')
-    docID = data.get('docID')
-    doc = Document.objects.get(id=docID)
-    if doc is None:
-        return JsonResponse({'msg': 'fail', 'error': 'docID is missed'}, status=400)
-    if context is None:
-        return JsonResponse({'msg': 'fail', 'error': 'context can not be null'}, status=400)
-    doc.context = context
-    doc.lastEditPerson = '游客' if person is None else person
-    doc.lastEditTime = datetime.datetime.now()
-    doc.save()
-    return JsonResponse({'msg': 'success'}, status=200)
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        context = data.get('context')
+        person = data.get('email')
+        docID = data.get('docID')
+        doc = Document.objects.get(id=docID)
+        if doc is None:
+            return JsonResponse({'msg': 'fail', 'error': 'docID is missed'}, status=400)
+        if context is None:
+            return JsonResponse({'msg': 'fail', 'error': 'context can not be null'}, status=400)
+        doc.context = context
+        doc.lastEditPerson = '游客' if person is None else person
+        doc.lastEditTime = datetime.datetime.now()
+        doc.save()
+        return JsonResponse({'msg': 'success'}, status=200)

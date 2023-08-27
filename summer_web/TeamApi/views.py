@@ -137,13 +137,23 @@ def removeMember(request):
             #普通用户不能踢人^^
             if role == 2:
                 return JsonResponse({'msg': 'fail', 'error': 'insufficient member permissions'}, status=400)
-            #管理员只能踢普通成员
+
+            # 创建者可以踢全部成员
+            if role == 0:
+                if not team.teammember_set.filter(member=member_to_remove).exists():
+                    return JsonResponse({'msg': 'fail', 'error': 'the member is not on the team'}, status=400)
+                if remover == member_to_remove:
+                    return JsonResponse({'msg': 'fail', 'error': 'cannot remove yourself'}, status=400)
+                team.teammember_set.filter(member=member_to_remove).delete()
+                return JsonResponse({'msg': 'success'}, status=200)
+
+            # 管理员只能踢普通成员
             if role == 1 and TeamMember.objects.get(member=member_to_remove, teamID=team).first().role != 2:
                 return JsonResponse({'msg': 'fail', 'error': 'insufficient member permissions'}, status=400)
             if not team.teammember_set.filter(member=member_to_remove).exists():
                 return JsonResponse({'msg': 'fail', 'error': 'the member is not on the team'}, status=400)
             if team.teammember_set.filter(member=member_to_remove, teamID=team).first().role != 2:
-                return JsonResponse({'msg': 'fail', 'error': 'can only delete putong member'}, status=400)
+                return JsonResponse({'msg': 'fail', 'error': 'can only delete normal member'}, status=400)
             team.teammember_set.filter(member=member_to_remove).delete()
             return JsonResponse({'msg': 'success'}, status=200)
         except UserInfo.DoesNotExist:
@@ -322,7 +332,7 @@ def skipToAtPosition(request):  # not test
                 'teamID': item.team.id,
                 'messageID': item.id,
                 'time': item.time.strftime("%Y-%m-%d %H:%M:%S"),
-                'type': TYPE_ITEM[item.type][1],
+                'type': item.type,
                 'message': message
             }
             msgList.append(info)
@@ -359,7 +369,7 @@ def getLateHistory(request):
                 'teamID': item.team.id,
                 'messageID': item.id,
                 'time': item.time.strftime("%Y-%m-%d %H:%M:%S"),
-                'type': TYPE_ITEM[item.type][1],
+                'type': item.type,
                 'message': message
             }
             result.append(info)
@@ -400,7 +410,7 @@ def getHistory(request):
                 'teamID': item.team.id,
                 'messageID': item.id,
                 'time': item.time.strftime("%Y-%m-%d %H:%M:%S"),
-                'type': TYPE_ITEM[item.type][1],
+                'type': item.type,
                 'message': message
             }
             result.append(info)
