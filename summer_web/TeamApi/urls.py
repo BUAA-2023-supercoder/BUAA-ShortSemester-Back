@@ -17,5 +17,6 @@ urlpatterns = [
     path('getatmessage/', views.getAtMessage),
     path('skiptoatinteam/', views.skipToAtPosition),
     path('chathistory/', views.getHistory),
-    path('deleteatmsg/', views.deleteAtMsg)
+    path('deleteatmsg/', views.deleteAtMsg),
+    path('getlatemessage/', views.getLateHistory)
 ]

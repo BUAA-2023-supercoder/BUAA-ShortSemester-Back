@@ -1,5 +1,5 @@
 from django.urls import path, include
-from . import projects
+from . import projects, docs
 
 urlpatterns = [
     path('getprojects/', projects.getProjectList),
@@ -7,5 +7,7 @@ urlpatterns = [
     path('deleteproject/', projects.changeProjectStatus),
     path('renameproject/', projects.renameProject),
     path('getdeletedproject/', projects.getDeletedProject),
-    path('getprojectinfo/', projects.getProjectInfo)
+    path('getprojectinfo/', projects.getProjectInfo),
+
+    path('createdoc/', docs.createDoc),
 ]
