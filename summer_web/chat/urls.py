@@ -11,4 +11,5 @@ urlpatterns = [
 
 websocket_urlpatterns = [
     path('ws/chat/<room_name>/', ChatConsumer.as_asgi()),
+    path('api/chat/<room_name>/', ChatConsumer.as_asgi()),
 ]
