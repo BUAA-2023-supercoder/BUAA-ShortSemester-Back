@@ -1,15 +1,13 @@
 import datetime
 import json
-import random
 from django.http import JsonResponse
 from django.utils.crypto import get_random_string
 
-from ProjectApi.models import Project, PrototypePage, Document, ShareLink
-from TeamApi.models import Team, TeamMember
+from ProjectApi.models import Project, PrototypePage, Document, ShareLink, DocAt
+from TeamApi.models import TeamMember
 from UserApi.models import UserInfo
 from summer_web.admin import getUserFromToken
 from UserApi.admin import validateAccessToken, getUserFromToken
-from summer_web.urls import URL
 
 
 def createDoc(request):
@@ -45,7 +43,7 @@ def saveDoc(request):
         return JsonResponse({'msg': 'fail', 'error': 'docID is missed'}, status=400)
     if context is None:
         return JsonResponse({'msg': 'fail', 'error': 'context can not be null'}, status=400)
-    if shareCode is None and request.headers.get('Authorization') is None:
+    if shareCode is None or request.headers.get('Authorization') is None:
         accessToken = request.headers.get('Authorization').split(' ')[1]
         if validateAccessToken(accessToken):
             user = UserInfo.objects.get(email=getUserFromToken(accessToken))
@@ -134,4 +132,42 @@ def getDocFromShare(request, shareCode):
                              'name': link.document.documentName
                          }}, status=200)
 
-def atDoc()
+def docAt(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        email = json.loads(request.body).get('email')
+        docID = json.loads(request.body).get('docID')
+        user = UserInfo.objects.get(email=email)
+        doc = Document.objects.get(id=docID)
+        if doc is None:
+            return JsonResponse({'msg': 'fail', 'error': 'docID is wrong'}, status=400)
+        if TeamMember.objects.filter(teamID=doc.project.team, member=user).count() == 0:
+            return JsonResponse({'msg': 'fail', 'error': 'this man is not in the team'}, status=400)
+        if DocAt.objects.filter(member=user, document=doc).count() == 0:
+            DocAt.objects.create(member=user, document=doc)
+        return JsonResponse({'msg': 'success'}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)
+
+def renameDoc(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        docID = json.loads(request.body).get('docID')
+        name = json.loads(request.body).get('name')
+        doc = Document.objects.get(id=docID)
+        user = UserInfo.objects.get(email=getUserFromToken(accessToken))
+        if doc is None:
+            return JsonResponse({'msg': 'fail', 'error': 'docID is wrong'}, status=400)
+        if TeamMember.objects.filter(teamID=doc.project.team, member=user).count() == 0:
+            return JsonResponse({'msg': 'fail', 'error': 'you have no permission to rename'}, status=400)
+        doc.documentName = name
+        doc.save()
+        return JsonResponse({'msg': 'success'}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)

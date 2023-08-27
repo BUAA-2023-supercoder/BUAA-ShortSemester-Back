@@ -31,3 +31,7 @@ class ShareLink(models.Model):
     document = models.ForeignKey('Document', on_delete=models.CASCADE)
     isWrite = models.BooleanField(default=False)
     validity = models.DateTimeField(null=True)
+
+class DocAt(models.Model):
+    member = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE)
+    document = models.ForeignKey('Document', on_delete=models.CASCADE)

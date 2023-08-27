@@ -161,6 +161,11 @@ def getProjectInfo(request):
             }
             docInfo.append(info)
         return JsonResponse({'msg': 'success',
+                             'basicInfo': {
+                                 'teamID': project.team.id,
+                                 'projectName': project.projectName,
+                                 'projectProfile': URL + project.image.url
+                             },
                              'pagesInfo': {
                                  'pageID': page.id,
                                  'name': page.prototypeName,
