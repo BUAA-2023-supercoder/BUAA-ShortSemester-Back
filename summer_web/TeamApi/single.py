@@ -46,7 +46,7 @@ def addSingleMessage(request):
                 return JsonResponse({'msg': 'fail', 'error': 'file is None'}, status=400)
             newMsg.type = 2
             newMsg.file = request.FILES['file']
-            newMsg.fileName = request.FILES['file'].name
+            newMsg.fileName = newMsg.file.split('/')[1]
             strAfter = '$$$' + 'Files' + '$$$' + newMsg.fileName + '@$%' + str(newMsg.id)
         else:
             newMsg.delete()
@@ -54,11 +54,37 @@ def addSingleMessage(request):
         newMsg.save()
 
         # set unreadRecord
-        if SingleUnread.objects.filter(sendUser=sender, receiveUser=receiver).count() == 0:
-            SingleUnread.objects.create(sendUser=sender, receiveUser=receiver)
+        '''
+            host -> sender   guest -> receiver
+            if A send B, then A(unread) == 0, B(unread) ++
+        '''
+        if SingleUnread.objects.filter(host=sender, guest=receiver).count() != 0:
+            SingleUnread.objects.get(host=sender, guest=receiver).delete()  # A(unread) = 0
+        if SingleUnread.objects.filter(host=receiver, guest=sender).count() == 0:
+            SingleUnread.objects.create(host=receiver, guest=sender)
         else:
-
+            obj = SingleUnread.objects.get(host=receiver, guest=sender)
+            obj.cnt = obj.cnt + 1
+            obj.save()                                                      # B(unread) ++
 
         return JsonResponse({'msg': 'success', 'str': strAfter, 'ID': newMsg.id}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
+
+
+def getSingleLateHistory(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        data = json.loads(request.body)
+        email = data.get('email')
+        cnt = data.get('times')
+        if cnt is None:
+            cnt = 50
+        who = UserInfo.objects.get(email=email)
+        if who is None:
+            return JsonResponse({'msg': 'fail', 'error': 'can not find this user'}, status=400)
+        user = UserInfo.objects.get(email=getUserFromToken(accessToken))
+        records = SingleMessage()

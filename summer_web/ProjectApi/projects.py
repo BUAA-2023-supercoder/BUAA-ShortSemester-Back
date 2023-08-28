@@ -58,7 +58,7 @@ def createProject(request):
         team = Team.objects.get(id=teamID)
         if team is None:
             return JsonResponse({'msg': 'fail', 'error': 'teamID does not exist'}, status=400)
-        num = random.randint(1, 6)
+        num = random.randint(1, 5)
         project = Project.objects.create(team=team,
                                          projectName=name if name is not None else 'untitled',
                                          image='ProjectProfile/' + str(num) + '.jpg')

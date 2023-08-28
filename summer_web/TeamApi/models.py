@@ -45,9 +45,9 @@ class SingleMessage(models.Model):
     time = models.DateTimeField(auto_now_add=True)
 
 class SingleUnread(models.Model):
-    sendUser = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE, related_name='send_un')
-    receiveUser = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE, related_name='receive_un')
-    times = models.IntegerField(default=1)
+    host = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE, related_name='host')
+    guest = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE, related_name='guest')
+    cnt = models.IntegerField(default=1)
 
 class AtMessage(models.Model):
     member = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE)

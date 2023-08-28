@@ -218,6 +218,9 @@ def saveUnread(sender, team):
                 obj = UnreadMessage.objects.get(team=team, member=person.member)
                 obj.nums = obj.nums + 1
                 obj.save()
+        else:
+            if UnreadMessage.objects.filter(team=team, member=person.member).count() != 0:
+                UnreadMessage.objects.get(team=team, member=person.member).delete()
     return
 
 
@@ -255,7 +258,7 @@ def addMessage(request):
                 return JsonResponse({'msg': 'fail', 'error': 'file is None'}, status=400)
             newMsg.type = 2
             newMsg.file = request.FILES['file']
-            newMsg.fileName = request.FILES['file'].name
+            newMsg.fileName = newMsg.file.split('/')[1]
             strAfter = '$$$' + 'Files' + '$$$' + newMsg.fileName + '@$%' + str(newMsg.id)
         else:
             newMsg.delete()
@@ -347,6 +350,8 @@ def skipToAtPosition(request):  # not test
                 'message': message
             }
             msgList.append(info)
+        if UnreadMessage.objects.filter(team=atMessage.team, member=user).count() != 0:
+            UnreadMessage.objects.get(team=atMessage.team, member=user).delete()
         return JsonResponse({'msg': 'success', 'chatHistory': msgList}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
@@ -362,6 +367,7 @@ def getLateHistory(request):
         team = Team.objects.get(id=teamID)
         if times is None:
             times = 50
+        print(times)
         if team is None:
             return JsonResponse({'msg': 'fail', 'error': 'teamID does not exist'}, status=400)
         records = list(TeamMessage.objects.filter(team=team).order_by('time'))
@@ -388,7 +394,8 @@ def getLateHistory(request):
             }
             result.append(info)
         user = UserInfo.objects.get(email=getUserFromToken(accessToken))
-        UnreadMessage.objects.get(team=team, member=user).delete()
+        if UnreadMessage.objects.filter(team=team, member=user).count() != 0:
+            UnreadMessage.objects.get(team=team, member=user).delete()
         return JsonResponse({'msg': 'success', 'chatHistory': result}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
@@ -431,7 +438,8 @@ def getHistory(request):
             }
             result.append(info)
         user = UserInfo.objects.get(email=getUserFromToken(accessToken))
-        UnreadMessage.objects.get(team=endMessage.team, member=user).delete()
+        if UnreadMessage.objects.filter(team=endMessage.team, member=user).count() != 0:
+            UnreadMessage.objects.get(team=endMessage.team, member=user).delete()
         return JsonResponse({'msg': 'success', 'chatHistory': result}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
