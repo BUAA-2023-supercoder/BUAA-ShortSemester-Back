@@ -15,6 +15,8 @@ urlpatterns = [
     path('getsharedoc/<str:shareCode>', docs.getDocFromShare),
     path('savedoc/', docs.saveDoc),
     path('docat/', docs.docAt),
+    path('getdocat/', docs.getDocAt),
+    path('deldocat/', docs.delAtInfo),
     path('renamedoc/', docs.renameDoc),
 
     path('getpage/<int:pageID>', prototypePage.getPage),

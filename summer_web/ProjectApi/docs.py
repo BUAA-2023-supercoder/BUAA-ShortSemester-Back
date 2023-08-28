@@ -171,3 +171,45 @@ def renameDoc(request):
         return JsonResponse({'msg': 'success'}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)
+
+def getDocAt(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        user = UserInfo.objects.get(email=getUserFromToken(accessToken))
+        if user is None:
+            return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)
+        records = DocAt.objects.filter(member=user).order_by('document_id')
+        result = list()
+        for item in records:
+            info = {
+                'docID': item.document.id,
+                'name': item.document.documentName,
+                'projectID': item.document.project.id,
+                'projectName': item.document.project.projectName,
+                'teamID': item.document.project.team.id
+            }
+            result.append(info)
+        return JsonResponse({'msg': 'success', 'result': result}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)
+
+def delAtInfo(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        user = UserInfo.objects.get(email=getUserFromToken(accessToken))
+        if user is None:
+            return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)
+        docID = json.loads(request.body).get('docID')
+        doc = Document.objects.get(id=docID)
+        if doc is None:
+            return JsonResponse({'msg': 'fail', 'error': 'docID is wrong'}, status=400)
+        DocAt.objects.get(document=doc, member=user).delete()
+        return JsonResponse({'msg': 'success'}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)

@@ -34,6 +34,21 @@ class TeamMessage(models.Model):
     team = models.ForeignKey('Team', on_delete=models.CASCADE)
 
 
+class SingleMessage(models.Model):
+    type = models.IntegerField(choices=TYPE_ITEM, null=False)
+    text = models.TextField(null=True)
+    image = models.ImageField(upload_to='Images/', null=True)
+    file = models.FileField(upload_to='Files/', null=True)
+    fileName = models.CharField(max_length=128, null=True)
+    sendUser = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE, related_name='send_msg')
+    receiveUser = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE, related_name='receive_msg')
+    time = models.DateTimeField(auto_now_add=True)
+
+class SingleUnread(models.Model):
+    sendUser = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE, related_name='send_un')
+    receiveUser = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE, related_name='receive_un')
+    times = models.IntegerField(default=1)
+
 class AtMessage(models.Model):
     member = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE)
     team = models.ForeignKey('Team', on_delete=models.CASCADE)
@@ -43,4 +58,4 @@ class AtMessage(models.Model):
 class UnreadMessage(models.Model):
     member = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE)
     team = models.ForeignKey('Team', on_delete=models.CASCADE)
-    teamMessage = models.ForeignKey('TeamMessage', on_delete=models.CASCADE)
+    nums = models.IntegerField(default=1)

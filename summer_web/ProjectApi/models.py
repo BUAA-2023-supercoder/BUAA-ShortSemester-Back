@@ -22,7 +22,7 @@ class PrototypePage(models.Model):
     context = models.TextField(null=True)
     lastEditTime = models.DateTimeField(auto_now_add=True)
     lastEditPerson = models.EmailField(null=True)
-    onEdit = models.BooleanField(default=True)
+    onEdit = models.BooleanField(default=False)
     height = models.IntegerField(default=400)
     width = models.IntegerField(default=200)
 

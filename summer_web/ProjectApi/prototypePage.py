@@ -21,12 +21,18 @@ def getPage(request, pageID):
             return JsonResponse({'msg': 'fail', 'error': 'pageID is wrong'}, status=400)
         if TeamMember.objects.filter(member=user, teamID=page.project.team).count() == 0:
             return JsonResponse({'msg': 'fail', 'error': 'you should not access this page'}, status=400)
-        if page.onEdit:
-            return JsonResponse({'msg': 'fail', 'error': 'other people are editing'}, status=250)
-        page.onEdit = True
-        page.lastEditTime = datetime.datetime.now()
-        page.lastEditPerson = user.email
-        return JsonResponse({'msg': 'success', 'context': page.context}, status=200)
+        info = {
+            'onEdit': page.onEdit,
+            'context': page.context,
+            'ID': page.id,
+            'height': page.height,
+            'width': page.width,
+            'name': page.prototypeName,
+            'lastEditTime': page.lastEditTime.strftime("%Y-%m-%d %H:%M:%S"),
+            'lastEditPerson': page.lastEditPerson,
+            'projectID': page.project.id
+        }
+        return JsonResponse({'msg': 'success', 'info': info}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)
 
