@@ -142,6 +142,9 @@ def getDocFromShare(request, shareCode):
                              'name': link.document.documentName
                          }}, status=200)
 
+
+# def atDoc()
+
 def docAt(request):
     if request.method != "POST":
         return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
@@ -223,3 +226,4 @@ def delAtInfo(request):
         return JsonResponse({'msg': 'success'}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)
+

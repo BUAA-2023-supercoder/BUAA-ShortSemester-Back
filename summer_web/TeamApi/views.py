@@ -1,6 +1,6 @@
 import json
 import os
-
+import re
 from django.db.models import Q
 from django.http import JsonResponse
 from django.utils.crypto import get_random_string
@@ -167,7 +167,6 @@ def removeMember(request):
 def getAllTeam(request):
     if request.method != "POST":
         return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
-
     accessToken = request.headers.get('Authorization').split(' ')[1]
     if validateAccessToken(accessToken):
         user = UserInfo.objects.get(email=getUserFromToken(accessToken))
@@ -240,9 +239,16 @@ def addMessage(request):
             if data.get('text') is None:
                 newMsg.delete()
                 return JsonResponse({'msg': 'fail', 'error': 'text is None'}, status=400)
-
-            newMsg.text = data.get('text')
+            text=data.get('text')
+            newMsg.text = text
             strAfter = data.get('text') + '@$%' + str(newMsg.id)
+            if '@' in text :  # 检查 @ 后面是否跟着邮箱
+                email_list = re.findall(r'@([^\s]+)\s', text)
+                for email in email_list:
+                    member = UserInfo.objects.get(email=email)
+                    if TeamMember.objects.filter(member=member,teamID=team).count()!=0:   #艾特的这个人必须在这个团队里面
+                        if AtMessage.objects.filter(teamMessage=newMsg, team=team, member=member).count() == 0:
+                            AtMessage.objects.create(member=member, team=team, teamMessage=newMsg)
         elif type == 'image':
             if request.FILES['img'] is None:
                 newMsg.delete()
@@ -299,8 +305,9 @@ def getAtMessage(request):
         result = list()
         for item in res:
             info = {
-                'ID': item.id,
+                'ID': item.teamMessage.id,
                 'teamID': item.team.id,
+                'teamName':item.team.name,
                 'text': item.teamMessage.text,
                 'time': item.teamMessage.time.strftime("%Y-%m-%d %H:%M:%S"),
                 'who': {
