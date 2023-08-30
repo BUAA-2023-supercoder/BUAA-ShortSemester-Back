@@ -61,7 +61,11 @@ def createProject(request):
         num = random.randint(1, 5)
         project = Project.objects.create(team=team,
                                          projectName=name if name is not None else 'untitled',
-                                         image='ProjectProfile/' + str(num) + '.jpg')
+                                         image='ProjectProfile/' + str(num) + '.jpg',
+                                         dict={
+                                             'document': list(),
+                                             'folder': list()
+                                         })
         page = PrototypePage.objects.create(project=project,
                                             prototypeName='untitled',
                                             lastEditPerson=getUserFromToken(accessToken),

@@ -26,6 +26,8 @@ def createDoc(request):
                                       documentName=name,
                                       context="",
                                       lastEditPerson=getUserFromToken(accessToken))
+        project.dict['document'].append(doc.id)
+        project.save()
         return JsonResponse({'msg': 'success', 'docID': doc.id}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)
