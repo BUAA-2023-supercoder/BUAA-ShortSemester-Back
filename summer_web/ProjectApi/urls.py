@@ -10,6 +10,7 @@ urlpatterns = [
     path('getprojectinfo/', projects.getProjectInfo),
     path('createfolder/', projects.createFolder),
     path('getdict/', projects.getDict),
+    path('copyproject/', projects.copyProject),
 
     path('createdoc/', docs.createDoc),
     path('createsharelink/', docs.createShareLink),

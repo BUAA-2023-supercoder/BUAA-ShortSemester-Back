@@ -26,15 +26,15 @@ def createDoc(request):
                                       documentName=name,
                                       context="",
                                       lastEditPerson=getUserFromToken(accessToken))
-        folder = data.get('folder')
-        if folder is None:
+        folderName = data.get('folder')
+        if folderName is None:
             print(project.dict['document'])
             project.dict['document'].append(doc.id)
         else:
-            if folder not in project.dict['folder']:
+            if folderName not in project.dict['folder']:
                 return JsonResponse({'msg': 'fail', 'error': 'wrong folder name'}, status=204)
             else:
-                project.dict['folder'][folder].append(doc.id)
+                project.dict['folder'][folderName]['documents'].append(doc.id)
         project.save()
         return JsonResponse({'msg': 'success', 'docID': doc.id}, status=200)
     else:

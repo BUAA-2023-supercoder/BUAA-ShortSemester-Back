@@ -1,6 +1,10 @@
+import datetime
 import json
 import random
+import time
+
 from django.http import JsonResponse
+from pyasn1.compat.octets import null
 
 from ProjectApi.models import Project, PrototypePage, Document
 from TeamApi.models import Team, TeamMember
@@ -18,6 +22,7 @@ def getProjectList(request):
     if validateAccessToken(accessToken):
         user = UserInfo.objects.get(email=getUserFromToken(accessToken))
         teamID = json.loads(request.body).get('teamID')
+        order = json.loads(request.body).get('order')
         team = list()
         if teamID is None:
             res = TeamMember.objects.filter(member=user)
@@ -26,9 +31,15 @@ def getProjectList(request):
                 team.append(item.teamID)
         else:
             team.append(Team.objects.get(id=teamID))
-        print(team)
         Rye = list()
-        projects = Project.objects.all().order_by('team_id')
+        if order is None or order == 'default':
+            projects = Project.objects.all().order_by('team_id')
+        elif order == 'time':
+            projects = Project.objects.all().order_by('-createTime')
+        elif order == 'name':
+            projects = Project.objects.all().order_by('projectName')
+        else:
+            return JsonResponse({'msg': 'fail', 'error': 'wrong method about order'}, status=400)
         for item in projects:
             if item.team in team and item.isDelete is False:
                 info = {
@@ -64,7 +75,7 @@ def createProject(request):
                                          image='ProjectProfile/' + str(num) + '.jpg',
                                          dict={
                                              'document': list(),
-                                             'folder': list()
+                                             'folder': dict()
                                          })
         page = PrototypePage.objects.create(project=project,
                                             prototypeName='untitled',
@@ -73,6 +84,59 @@ def createProject(request):
                                             height=height,
                                             width=width)
         return JsonResponse({'msg': 'success', 'pageID': page.id, 'projectID': project.id}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)
+
+def copyProject(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        projectID = json.loads(request.body).get('projectID')
+        project = Project.objects.get(id=projectID)
+        if project is None:
+            return JsonResponse({'msg': 'fail', 'error': 'wrong projectID'}, status=400)
+        num = random.randint(1, 5)
+        newProject = Project.objects.create(team=project.team,
+                                            projectName=project.projectName + ' - 副本',
+                                            image='ProjectProfile/' + str(num) + '.jpg',
+                                            dict=project.dict)
+        oldPage = PrototypePage.objects.get(id=project.id)
+        page = PrototypePage.objects.create(project=project,
+                                            prototypeName=oldPage.prototypeName + ' - 副本',
+                                            lastEditPerson=getUserFromToken(accessToken),
+                                            context=oldPage.context,
+                                            height=oldPage.height,
+                                            width=oldPage.width)
+        dit = {
+            "folder": dict(),
+            "document": list()
+        }
+        for item in project.dict['document']:
+            doc = Document.objects.get(id=item)
+            newDoc = Document.objects.create(project=newProject,
+                                             documentName=doc.documentName + ' - 副本',
+                                             context=doc.context,
+                                             lastEditPerson=getUserFromToken(accessToken))
+            dit['document'].append(newDoc.id)
+        for key, val in project.dict['folder'].items():
+            info = list()
+            for item in val['documents']:
+                doc = Document.objects.get(id=item)
+                newDoc = Document.objects.create(project=newProject,
+                                                 documentName=doc.documentName,
+                                                 context=doc.context,
+                                                 lastEditPerson=getUserFromToken(accessToken))
+                info.append(newDoc.id)
+            dit['folder'][key] = {
+                'createTime': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                'createPerson': UserInfo.objects.get(email=getUserFromToken(accessToken)).email,
+                'documents': info
+            }
+        newProject.dict = dit
+        newProject.save()
+        return JsonResponse({'msg': 'success', 'pageID': page.id, 'projectID': newProject.id}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)
 
@@ -198,11 +262,22 @@ def createFolder(request):
             return JsonResponse({'msg': 'fail', 'error': 'wrong projectID'}, status=400)
         if name in project.dict['folder']:
             return JsonResponse({'msg': 'fail', 'error': 'the folder name can not be same!!'}, status=201)
-        project.dict['folder'][name] = list()
+        folderInfo = {
+            'createTime': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            'createPerson': UserInfo.objects.get(email=getUserFromToken(accessToken)).email,
+            'documents': list()
+        }
+        project.dict['folder'][name] = folderInfo
         project.save()
         return JsonResponse({'msg': 'success'}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'login first please'}, status=400)
+
+def checkTime(time1, time2):
+    t1 = time.strptime(time1, '%Y-%m-%d %H:%M:%S')
+    t2 = time.strptime(time2, '%Y-%m-%d %H:%M:%S')
+    return t1 < t2
+
 
 def getDict(request):
     if request.method != "POST":
@@ -214,6 +289,40 @@ def getDict(request):
         project = Project.objects.get(id=projectID)
         if project is None:
             return JsonResponse({'msg': 'fail', 'error': 'wrong projectID'}, status=400)
-        return JsonResponse({'msg': 'success', 'dict': project.dict}, status=200)
+
+        documents = list()
+        for ID in project.dict['document']:
+            obj = Document.objects.get(id=ID)
+            docInfo = {
+                'ID': obj.id,
+                'name': obj.documentName,
+                'lastEditTime': obj.lastEditTime.strftime("%Y-%m-%d %H:%M:%S"),
+                'lastEditPerson': obj.lastEditPerson
+            }
+            documents.append(docInfo)
+        folders = list()
+        for key, val in project.dict['folder'].items():
+            info = {
+                'name': key,
+                'createTime': val['createTime'],
+                'createPerson': val['createPerson'],
+                'lastEditTime': val['createTime'],
+                'lastEditPerson': val['createPerson'],
+                'documents': list()
+            }
+            for ID in val['documents']:
+                obj = Document.objects.get(id=ID)
+                docInfo = {
+                    'ID': obj.id,
+                    'name': obj.documentName,
+                    'lastEditTime': obj.lastEditTime.strftime("%Y-%m-%d %H:%M:%S"),
+                    'lastEditPerson': obj.lastEditPerson
+                }
+                info['documents'].append(docInfo)
+                if checkTime(info['lastEditTime'], docInfo['lastEditTime']):
+                    info['lastEditTime'] = docInfo['lastEditTime']
+                    info['lastEditPerson'] = docInfo['lastEditPerson']
+            folders.append(info)
+        return JsonResponse({'msg': 'success', 'dict': {'documents': documents, 'folders': folders}}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'login first please'}, status=400)
