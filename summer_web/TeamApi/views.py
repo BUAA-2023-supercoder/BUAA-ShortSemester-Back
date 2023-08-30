@@ -258,7 +258,7 @@ def addMessage(request):
                 return JsonResponse({'msg': 'fail', 'error': 'file is None'}, status=400)
             newMsg.type = 2
             newMsg.file = request.FILES['file']
-            newMsg.fileName = newMsg.file.split('/')[1]
+            newMsg.fileName = newMsg.file.name
             strAfter = '$$$' + 'Files' + '$$$' + newMsg.fileName + '@$%' + str(newMsg.id)
         else:
             newMsg.delete()

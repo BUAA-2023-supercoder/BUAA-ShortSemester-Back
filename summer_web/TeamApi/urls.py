@@ -1,7 +1,7 @@
 from django.urls import path, include
 
 
-from . import views
+from . import views, single
 
 urlpatterns = [
     path('createteam/', views.createTeam),
@@ -16,7 +16,11 @@ urlpatterns = [
     path('messageat/', views.messageAt),
     path('getatmessage/', views.getAtMessage),
     path('skiptoatinteam/', views.skipToAtPosition),
+
+
     path('chathistory/', views.getHistory),
     path('deleteatmsg/', views.deleteAtMsg),
-    path('getlatemessage/', views.getLateHistory)
+    path('getlatemessage/', views.getLateHistory),
+
+    path('sendsinglemsg/', single.addSingleMessage),
 ]

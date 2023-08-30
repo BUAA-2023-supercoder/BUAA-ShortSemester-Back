@@ -164,6 +164,7 @@ def getProjectInfo(request):
                              'basicInfo': {
                                  'teamID': project.team.id,
                                  'projectName': project.projectName,
+                                 'createTime': project.createTime.strftime("%Y-%m-%d %H:%M:%S"),
                                  'projectProfile': URL + project.image.url
                              },
                              'pagesInfo': {

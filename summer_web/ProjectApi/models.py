@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import models
 
 # Create your models here.
@@ -6,6 +8,8 @@ class Project(models.Model):
     projectName = models.CharField(max_length=128, null=False)
     isDelete = models.BooleanField(default=False)
     image = models.ImageField(upload_to='ProjectProfile/', default='ProjectProfile/1.jpg')
+    createTime = models.DateTimeField(auto_now_add=True)
+    dict = models.JSONField(default=list)
 
 
 class Document(models.Model):
