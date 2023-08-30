@@ -21,14 +21,13 @@ from django.conf.urls.static import static
 from summer_web import settings
 
 
-URL = '127.0.0.1:8000'
-
+URL = 'http://154.8.183.51/api'
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/chat/", include("chat.urls")),
-    path("api/person",include("chat.urls")),
+    path("api/person", include("chat.urls")),
     path("api/", include("UserApi.urls")),
     path("api/", include("TeamApi.urls")),
     path("api/", include("ProjectApi.urls")),

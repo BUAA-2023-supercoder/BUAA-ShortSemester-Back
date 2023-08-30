@@ -15,6 +15,7 @@ class MyConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.email = self.scope['url_route']['kwargs']['email']
         self.email = self.email.replace("@", "_")
+        print(self.email)
         self.room_group_name = f'person_{self.email}'
         # 存储客户端连接
         clients[self.email] = self.channel_name
@@ -40,18 +41,18 @@ class MyConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         # 解析消息，获取目标用户和内容
         content = json.loads(text_data)
-        print("contene的内容是",content)
+        print("contene的内容是", content)
         if '@' in content:
             # 提取被@的用户名
-            print("有人被@了")
             start_index = content.index('@') + 1
             end_index = content.index(' ', start_index)
             at_userid = content[start_index:end_index]
-            at_userid=at_userid.replace('@','_')
+            at_userid = at_userid.replace("@", "_")
             print(at_userid)
+            print(clients)
             if at_userid in clients:
                 at_client_channel_name = clients[at_userid]
-                print("我要发消息给他了",at_client_channel_name)
+                print("我要发消息给他了", at_client_channel_name)
                 # 发送系统消息给被@的用户
                 await self.channel_layer.send(
                     at_client_channel_name,
@@ -74,6 +75,8 @@ class MyConsumer(AsyncWebsocketConsumer):
 
         # 发送系统消息给WebSocket连接
         await self.send(text_data=message)
+
+
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
@@ -156,18 +159,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "nickname": await sync_to_async(lambda: msg.sender.nickname)(),
             "realname": await sync_to_async(lambda: msg.sender.realname)(),
         }
-        receiver ={
-            "name":await sync_to_async(lambda: msg.team.name)(),
+        receiver = {
+            "name": await sync_to_async(lambda: msg.team.name)(),
             "id": str(await sync_to_async(lambda: msg.team.id)())
         }
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
-                            "group":True,
-                            "msg": message,
-                            "type": msg.type,
-                            "time": msg.time.strftime("%Y-%m-%d %H:%M:%S"),
-                            "sender": sender,
-                            "receiver": receiver
+            "group": True,
+            "msg": message,
+            "type": msg.type,
+            "time": msg.time.strftime("%Y-%m-%d %H:%M:%S"),
+            "sender": sender,
+            "receiver": receiver
         }))
 
     # async def chat_image(self, event):

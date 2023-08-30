@@ -58,7 +58,7 @@ def createProject(request):
         team = Team.objects.get(id=teamID)
         if team is None:
             return JsonResponse({'msg': 'fail', 'error': 'teamID does not exist'}, status=400)
-        num = random.randint(1, 6)
+        num = random.randint(1, 5)
         project = Project.objects.create(team=team,
                                          projectName=name if name is not None else 'untitled',
                                          image='ProjectProfile/' + str(num) + '.jpg')
@@ -161,6 +161,12 @@ def getProjectInfo(request):
             }
             docInfo.append(info)
         return JsonResponse({'msg': 'success',
+                             'basicInfo': {
+                                 'teamID': project.team.id,
+                                 'projectName': project.projectName,
+                                 'createTime': project.createTime.strftime("%Y-%m-%d %H:%M:%S"),
+                                 'projectProfile': URL + project.image.url
+                             },
                              'pagesInfo': {
                                  'pageID': page.id,
                                  'name': page.prototypeName,

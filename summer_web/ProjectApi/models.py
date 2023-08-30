@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import models
 
 # Create your models here.
@@ -6,6 +8,8 @@ class Project(models.Model):
     projectName = models.CharField(max_length=128, null=False)
     isDelete = models.BooleanField(default=False)
     image = models.ImageField(upload_to='ProjectProfile/', default='ProjectProfile/1.jpg')
+    createTime = models.DateTimeField(auto_now_add=True)
+    dict = models.JSONField(default=list)
 
 
 class Document(models.Model):
@@ -22,7 +26,7 @@ class PrototypePage(models.Model):
     context = models.TextField(null=True)
     lastEditTime = models.DateTimeField(auto_now_add=True)
     lastEditPerson = models.EmailField(null=True)
-    onEdit = models.BooleanField(default=True)
+    onEdit = models.BooleanField(default=False)
     height = models.IntegerField(default=400)
     width = models.IntegerField(default=200)
 
@@ -31,3 +35,7 @@ class ShareLink(models.Model):
     document = models.ForeignKey('Document', on_delete=models.CASCADE)
     isWrite = models.BooleanField(default=False)
     validity = models.DateTimeField(null=True)
+
+class DocAt(models.Model):
+    member = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE)
+    document = models.ForeignKey('Document', on_delete=models.CASCADE)
