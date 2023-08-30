@@ -167,7 +167,6 @@ def removeMember(request):
 def getAllTeam(request):
     if request.method != "POST":
         return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
-
     accessToken = request.headers.get('Authorization').split(' ')[1]
     if validateAccessToken(accessToken):
         user = UserInfo.objects.get(email=getUserFromToken(accessToken))

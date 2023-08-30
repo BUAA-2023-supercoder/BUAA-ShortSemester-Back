@@ -134,4 +134,4 @@ def getDocFromShare(request, shareCode):
                              'name': link.document.documentName
                          }}, status=200)
 
-def atDoc()
+# def atDoc()

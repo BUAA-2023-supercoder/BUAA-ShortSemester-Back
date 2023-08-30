@@ -47,6 +47,7 @@ class MyConsumer(AsyncWebsocketConsumer):
             start_index = content.index('@') + 1
             end_index = content.index(' ', start_index)
             at_userid = content[start_index:end_index]
+            at_userid=at_userid.replace('@','_')
             print(at_userid)
             if at_userid in clients:
                 at_client_channel_name = clients[at_userid]
@@ -56,7 +57,7 @@ class MyConsumer(AsyncWebsocketConsumer):
                     at_client_channel_name,
                     {
                         'type': 'system_message',
-                        'message': "You have been mentioned"
+                        'message': content
                     }
                 )
             else:
