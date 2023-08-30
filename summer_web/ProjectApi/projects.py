@@ -183,3 +183,37 @@ def getProjectInfo(request):
                              'docInfo': docInfo}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'login first please'}, status=400)
+
+
+def createFolder(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        projectID = json.loads(request.body).get('projectID')
+        name = json.loads(request.body).get('name')
+        project = Project.objects.get(id=projectID)
+        if project is None:
+            return JsonResponse({'msg': 'fail', 'error': 'wrong projectID'}, status=400)
+        if name in project.dict['folder']:
+            return JsonResponse({'msg': 'fail', 'error': 'the folder name can not be same!!'}, status=201)
+        project.dict['folder'][name] = list()
+        project.save()
+        return JsonResponse({'msg': 'success'}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'login first please'}, status=400)
+
+def getDict(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        projectID = json.loads(request.body).get('projectID')
+        project = Project.objects.get(id=projectID)
+        if project is None:
+            return JsonResponse({'msg': 'fail', 'error': 'wrong projectID'}, status=400)
+        return JsonResponse({'msg': 'success', 'dict': project.dict}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'login first please'}, status=400)

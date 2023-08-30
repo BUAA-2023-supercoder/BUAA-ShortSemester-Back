@@ -8,6 +8,8 @@ urlpatterns = [
     path('renameproject/', projects.renameProject),
     path('getdeletedproject/', projects.getDeletedProject),
     path('getprojectinfo/', projects.getProjectInfo),
+    path('createfolder/', projects.createFolder),
+    path('getdict/', projects.getDict),
 
     path('createdoc/', docs.createDoc),
     path('createsharelink/', docs.createShareLink),
