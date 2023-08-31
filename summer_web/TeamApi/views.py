@@ -249,7 +249,17 @@ def addMessage(request):
                     if TeamMember.objects.filter(member=member, teamID=team).count() != 0:   # 艾特的这个人必须在这个团队里面
                         if AtMessage.objects.filter(teamMessage=newMsg, team=team, member=member).count() == 0:
                             AtMessage.objects.create(member=member, team=team, teamMessage=newMsg)
+        elif type == 'forwardmessage':
+
+            if data.get('text') is None:
+                newMsg.delete()
+                return JsonResponse({'msg': 'fail', 'error': 'text is None'}, status=400)
+            text = data.get('text')
+            newMsg.text = text
+            strAfter = data.get('text') + '@$%' + str(newMsg.id)
+
         elif type == 'image':
+
             if request.FILES['img'] is None:
                 newMsg.delete()
                 return JsonResponse({'msg': 'fail', 'error': 'image is None'}, status=400)

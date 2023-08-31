@@ -11,6 +11,7 @@ urlpatterns = [
     path('createfolder/', projects.createFolder),
     path('getdict/', projects.getDict),
     path('copyproject/', projects.copyProject),
+    path('folderename/', projects.folderRename),
 
     path('createdoc/', docs.createDoc),
     path('createsharelink/', docs.createShareLink),

@@ -273,6 +273,30 @@ def createFolder(request):
     else:
         return JsonResponse({'msg': 'fail', 'error': 'login first please'}, status=400)
 
+
+
+def folderRename(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        data = json.loads(request.body)
+        oldName = data.get('oldName')
+        newName = data.get('newName')
+        projectID = data.get('projectID')
+        project = Project.objects.get(id=projectID)
+        if project is None:
+            return JsonResponse({'msg': 'fail', 'error': 'projectID is wrong'}, status=400)
+        info = project.dict['folder'][oldName]
+        del project.dict['folder'][oldName]
+        project.dict['folder'][newName] = info
+        project.save()
+        return JsonResponse({'msg': 'success'}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'login first please'}, status=400)
+
+
 def checkTime(time1, time2):
     t1 = time.strptime(time1, '%Y-%m-%d %H:%M:%S')
     t2 = time.strptime(time2, '%Y-%m-%d %H:%M:%S')
