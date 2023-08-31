@@ -134,7 +134,7 @@ def removeMember(request):
 
             team_member = TeamMember.objects.get(member=remover, teamID=team)
             role = team_member.role
-            #普通用户不能踢人^^
+            # 普通用户不能踢人^^
             if role == 2:
                 return JsonResponse({'msg': 'fail', 'error': 'insufficient member permissions'}, status=400)
 
@@ -207,6 +207,40 @@ def getAllMember(request):
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
 
+
+def getAllFriends(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        user = UserInfo.objects.get(email=getUserFromToken(accessToken))
+        relation = TeamMember.objects.filter(member=user)
+        teams = list()
+        for item in relation:
+            teams.append(item.teamID)
+        colleague = TeamMember.objects.filter(teamID__in=teams)
+        result = dict()
+        for item in colleague:
+            person = item.member
+            if person == user:
+                continue
+            if person.email not in result:
+                info = {
+                    'nickname': person.nickname,
+                    'realname': person.realname,
+                    'profile': URL + person.profile.url,
+                    'teams': [{'teamID': item.teamID.id, 'name': item.teamID.name}]
+                }
+                result[person.email] = info
+            else:
+                result[person.email]['teams'].append({'teamID': item.teamID.id, 'name': item.teamID.name})
+        return JsonResponse({'msg': 'success', 'colleague': result}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
+
+
+
 def saveUnread(sender, team):
     persons = TeamMember.objects.filter(teamID=team)
     for person in persons:
@@ -256,6 +290,7 @@ def addMessage(request):
                 return JsonResponse({'msg': 'fail', 'error': 'text is None'}, status=400)
             text = data.get('text')
             newMsg.text = text
+            newMsg.type = 3
             strAfter = data.get('text') + '@$%' + str(newMsg.id)
 
         elif type == 'image':

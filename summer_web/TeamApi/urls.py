@@ -11,6 +11,7 @@ urlpatterns = [
     path('setadmin/', views.setAdmin),
     path('allteam/', views.getAllTeam),
     path('allmember/', views.getAllMember),
+    path('allfriends/', views.getAllFriends),
     path('sendmessage/', views.addMessage),
     path('seteamprofile/', views.setTeamProfile),
     path('messageat/', views.messageAt),

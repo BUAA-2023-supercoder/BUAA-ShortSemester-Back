@@ -168,6 +168,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "group": True,
             "msg": message,
             "type": msg.type,
+            "messageID": ID,
             "time": msg.time.strftime("%Y-%m-%d %H:%M:%S"),
             "sender": sender,
             "receiver": receiver
