@@ -17,6 +17,9 @@ urlpatterns = [
     path('messageat/', views.messageAt),
     path('getatmessage/', views.getAtMessage),
     path('skiptoatinteam/', views.skipToAtPosition),
+    path('readatmessage/', views.readAtMessage),
+    path('accessteamgroup/', views.accessTeamChat),
+    path('getunread/', views.getUnreadInfo),
 
 
     path('chathistory/', views.getHistory),
@@ -24,6 +27,7 @@ urlpatterns = [
     path('getlatemessage/', views.getLateHistory),
 
     path('sendsinglemsg/', single.addSingleMessage),
+    path('accessingle/', single.accessSingleChat),
 
     path('createchatgroup/', chatGroup.createChatGroup),
     path('addtochatgroup/', chatGroup.addToChatGroup),

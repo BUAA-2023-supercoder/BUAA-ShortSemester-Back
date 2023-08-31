@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.utils.crypto import get_random_string
 
 from summer_web.urls import URL
-from .models import Team, TeamMember, TYPE_ITEM, ROLE_ITEM, TeamMessage, AtMessage, UnreadMessage
+from .models import Team, TeamMember, TYPE_ITEM, ROLE_ITEM, TeamMessage, AtMessage, UnreadMessage, SingleUnread
 from UserApi.models import UserInfo, GENDER_ITEMS
 from UserApi.admin import validateAccessToken, getUserFromToken
 
@@ -26,6 +26,7 @@ def createTeam(request):
         return JsonResponse({'msg': 'success'}, status=200)
     else:
         JsonResponse({'message': 'fail', 'error': 'please login first'}, status=400)
+
 
 def setAdmin(request):
     if request.method != "POST":
@@ -87,6 +88,7 @@ def setTeamProfile(request):
     else:
         return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)
 
+
 def invite(request):
     if request.method != "POST":
         return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
@@ -98,9 +100,9 @@ def invite(request):
     email = data.get('email')
     if decodedToken:
         try:
-            inviter = UserInfo.objects.get(email=getUserFromToken(accessToken))     # user
+            inviter = UserInfo.objects.get(email=getUserFromToken(accessToken))  # user
             team = Team.objects.get(id=teamId)  # team
-            invitees = UserInfo.objects.get(email=email)    # user
+            invitees = UserInfo.objects.get(email=email)  # user
             team_member = TeamMember.objects.get(member=inviter, teamID=team)
             role = team_member.role
             if role == 2:
@@ -115,6 +117,7 @@ def invite(request):
             return JsonResponse({'msg': 'fail', 'error': 'team does not exist'}, status=400)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
+
 
 def removeMember(request):
     if request.method != "POST":
@@ -240,7 +243,6 @@ def getAllFriends(request):
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
 
 
-
 def saveUnread(sender, team):
     persons = TeamMember.objects.filter(teamID=team)
     for person in persons:
@@ -280,7 +282,7 @@ def addMessage(request):
                 email_list = re.findall(r'@([^\s]+)\s', text)
                 for email in email_list:
                     member = UserInfo.objects.get(email=email)
-                    if TeamMember.objects.filter(member=member, teamID=team).count() != 0:   # 艾特的这个人必须在这个团队里面
+                    if TeamMember.objects.filter(member=member, teamID=team).count() != 0:  # 艾特的这个人必须在这个团队里面
                         if AtMessage.objects.filter(teamMessage=newMsg, team=team, member=member).count() == 0:
                             AtMessage.objects.create(member=member, team=team, teamMessage=newMsg)
         elif type == 'forwardmessage':
@@ -339,6 +341,7 @@ def messageAt(request):
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
 
+
 def getAtMessage(request):
     if request.method != "POST":
         return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
@@ -352,7 +355,7 @@ def getAtMessage(request):
             info = {
                 'ID': item.teamMessage.id,
                 'teamID': item.team.id,
-                'teamName':item.team.name,
+                'teamName': item.team.name,
                 'text': item.teamMessage.text,
                 'time': item.teamMessage.time.strftime("%Y-%m-%d %H:%M:%S"),
                 'who': {
@@ -407,6 +410,7 @@ def skipToAtPosition(request):  # not test
         return JsonResponse({'msg': 'success', 'chatHistory': msgList}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
+
 
 def getLateHistory(request):
     if request.method != "POST":
@@ -525,14 +529,61 @@ def getUnreadInfo(request):
         user = UserInfo.objects.get(email=getUserFromToken(accessToken))
         result = UnreadMessage.objects.filter(member=user)
         teamInfo = list()
+        totNum = 0
         for item in result:
             info = {
                 'teamID': item.team.id,
+                'name': item.team.name,
                 'nums': item.nums
             }
+            totNum = totNum + item.nums
             teamInfo.append(info)
-        # TODO
-        # to do chat with single person
-        return JsonResponse({'msg': 'success', 'teamInfo': teamInfo}, status=200)
+
+        singleRecord = SingleUnread.objects.filter(host=user)
+        singleInfo = list()
+        for item in singleRecord:
+            info = {
+                'email': item.host.email,
+                'nums': item.cnt
+            }
+            totNum = totNum + item.cnt
+            singleInfo.append(info)
+        return JsonResponse({'msg': 'success', 'teamInfo': teamInfo,
+                             'singleInfo': singleInfo, 'tot': totNum}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
+
+
+def readAtMessage(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        msgID = json.loads(request.body).get('messageID')
+        msg = TeamMessage.objects.get(id=msgID)
+        user = UserInfo.objects.get(email=getUserFromToken(accessToken))
+        AtMessage.objects.get(member=user, teamMessage=msg).delete()
+        return JsonResponse({'mag': 'success'}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
+
+
+def accessTeamChat(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        teamID = json.loads(request.body).get('teamID')
+        team = Team.objects.get(id=teamID)
+        user = UserInfo.objects.get(email=getUserFromToken(accessToken))
+        obj = AtMessage.objects.get(member=user, team=team)
+        if obj is not None:
+            obj.delete()
+        obj = UnreadMessage.objects.get(member=user, team=team)
+        if obj is not None:
+            obj.delete()
+        return JsonResponse({'msg': 'success'}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
