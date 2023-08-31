@@ -103,8 +103,8 @@ def copyProject(request):
                                             image='ProjectProfile/' + str(num) + '.jpg',
                                             dict=project.dict)
         oldPage = PrototypePage.objects.get(id=project.id)
-        page = PrototypePage.objects.create(project=project,
-                                            prototypeName=oldPage.prototypeName + ' - 副本',
+        page = PrototypePage.objects.create(project=newProject,
+                                            prototypeName=oldPage.prototypeName,
                                             lastEditPerson=getUserFromToken(accessToken),
                                             context=oldPage.context,
                                             height=oldPage.height,
@@ -116,7 +116,7 @@ def copyProject(request):
         for item in project.dict['document']:
             doc = Document.objects.get(id=item)
             newDoc = Document.objects.create(project=newProject,
-                                             documentName=doc.documentName + ' - 副本',
+                                             documentName=doc.documentName,
                                              context=doc.context,
                                              lastEditPerson=getUserFromToken(accessToken))
             dit['document'].append(newDoc.id)
