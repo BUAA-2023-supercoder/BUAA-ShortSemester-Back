@@ -25,7 +25,7 @@ def createTeam(request):
         TeamMember.objects.create(member=member, teamID=team, role=0)
         return JsonResponse({'msg': 'success'}, status=200)
     else:
-        JsonResponse({'message': 'please login first'}, status=400)
+        JsonResponse({'message': 'fail', 'error': 'please login first'}, status=400)
 
 def setAdmin(request):
     if request.method != "POST":
@@ -239,14 +239,14 @@ def addMessage(request):
             if data.get('text') is None:
                 newMsg.delete()
                 return JsonResponse({'msg': 'fail', 'error': 'text is None'}, status=400)
-            text=data.get('text')
+            text = data.get('text')
             newMsg.text = text
             strAfter = data.get('text') + '@$%' + str(newMsg.id)
-            if '@' in text :  # 检查 @ 后面是否跟着邮箱
+            if '@' in text:  # 检查 @ 后面是否跟着邮箱
                 email_list = re.findall(r'@([^\s]+)\s', text)
                 for email in email_list:
                     member = UserInfo.objects.get(email=email)
-                    if TeamMember.objects.filter(member=member,teamID=team).count()!=0:   #艾特的这个人必须在这个团队里面
+                    if TeamMember.objects.filter(member=member, teamID=team).count() != 0:   # 艾特的这个人必须在这个团队里面
                         if AtMessage.objects.filter(teamMessage=newMsg, team=team, member=member).count() == 0:
                             AtMessage.objects.create(member=member, team=team, teamMessage=newMsg)
         elif type == 'image':
@@ -486,6 +486,7 @@ def getUnreadInfo(request):
                 'nums': item.nums
             }
             teamInfo.append(info)
+        # TODO
         # to do chat with single person
         return JsonResponse({'msg': 'success', 'teamInfo': teamInfo}, status=200)
     else:

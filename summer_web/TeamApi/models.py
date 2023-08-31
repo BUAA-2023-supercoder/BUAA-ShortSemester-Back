@@ -5,6 +5,7 @@ class Team(models.Model):
     creator = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE)
     name = models.CharField(max_length=128, null=False)
     profile = models.ImageField(upload_to="TeamProfile/", default="TeamProfile/default.png")
+    isReal = models.BooleanField(default=True)
 
 ROLE_ITEM = [
     (0, '创建者'),
