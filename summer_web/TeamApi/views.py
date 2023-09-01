@@ -333,7 +333,7 @@ def differ(request):
         return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
 
     isGroup = request.POST.get('group')
-    if isGroup:
+    if isGroup == "true":
         return addMessage(request)
     else:
         return addSingleMessage(request)

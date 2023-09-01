@@ -21,7 +21,7 @@ def addSingleMessage(request):
         receiver = UserInfo.objects.get(email=data.get('receiver'))
         sender = UserInfo.objects.get(email=getUserFromToken(accessToken))
         type = data.get('type')
-        newMsg = TeamMessage.objects.create(sendUser=sender, receiveUser=receiver, type=0, isGroup=False)
+        newMsg = TeamMessage.objects.create(sender=sender, receiver=receiver, type=0, isGroup=False)
         if type == 'text':
             if data.get('text') is None:
                 newMsg.delete()

@@ -3,7 +3,7 @@ import json
 from django.http import JsonResponse
 from django.utils.crypto import get_random_string
 
-from ProjectApi.models import Project, PrototypePage, Document, ShareLink, DocAt
+from ProjectApi.models import Project, PrototypePage, Document, ShareLink, DocAt, DocVersion
 from TeamApi.models import TeamMember
 from UserApi.models import UserInfo
 from summer_web.admin import getUserFromToken
@@ -47,6 +47,7 @@ def saveDoc(request):
     data = json.loads(request.body)
     context = data.get('context')
     docID = data.get('docID')
+    save = data.get('saveVersion')
     doc = Document.objects.get(id=docID)
     shareCode = data.get('shareCode')
     if doc is None:
@@ -73,7 +74,27 @@ def saveDoc(request):
         doc.lastEditTime = datetime.datetime.now()
     doc.context = context
     doc.save()
+    if save is not None and save:
+        cnt = DocVersion.objects.filter(docID=doc.id)
+        DocVersion.objects.create(docID=doc.id, context=context, version=cnt+1)
     return JsonResponse({'msg': 'success'}, status=200)
+
+
+def getVersion(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    docID = json.loads(request.body).get('docID')
+    res = DocVersion.objects.filter(docID=docID).order_by('saveTime')
+    result = list()
+    for item in res:
+        info = {
+            'version': item.version,
+            'saveTime': item.saveTime.strftime("%Y-%m-%d %H:%M:%S"),
+            'context': item.context
+        }
+        result.append(info)
+    return JsonResponse({'msg': 'success', 'version': result}, status=200)
 
 
 def createShareLink(request):

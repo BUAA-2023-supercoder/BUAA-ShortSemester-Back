@@ -39,3 +39,8 @@ class ShareLink(models.Model):
 class DocAt(models.Model):
     member = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE)
     document = models.ForeignKey('Document', on_delete=models.CASCADE)
+class DocVersion(models.Model):
+    docID = models.IntegerField(null=False)
+    context = models.TextField(null=True)
+    saveTime = models.DateTimeField(auto_now_add=True)
+    version = models.IntegerField(default=1)

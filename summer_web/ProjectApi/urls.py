@@ -22,6 +22,7 @@ urlpatterns = [
     path('getdocat/', docs.getDocAt),
     path('deldocat/', docs.delAtInfo),
     path('renamedoc/', docs.renameDoc),
+    path('historyversion/', docs.getVersion),
 
     path('getpage/<int:pageID>', prototypePage.getPage),
     path('savepage/', prototypePage.savePage),

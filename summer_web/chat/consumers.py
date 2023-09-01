@@ -166,7 +166,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
         else:
             receiver = {
-                "name": await sync_to_async(lambda: msg.team.name)(),
+                "name": await sync_to_async(lambda: msg.receiver.nickname)(),
                 "id": str(await sync_to_async(lambda: msg.receiver.email)()),
             }
         # Send message to WebSocket
