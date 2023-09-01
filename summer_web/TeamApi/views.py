@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.utils.crypto import get_random_string
 
+from ProjectApi.models import Project
 from summer_web.urls import URL
 from .models import Team, TeamMember, TYPE_ITEM, ROLE_ITEM, TeamMessage, AtMessage, UnreadMessage, SingleUnread
 from UserApi.models import UserInfo, GENDER_ITEMS
@@ -176,9 +177,14 @@ def getAllTeam(request):
         res = TeamMember.objects.filter(member=user)
         result = list()
         for item in res:
+            if UnreadMessage.objects.filter(member=user, team=item.teamID).count() != 0:
+                unread = UnreadMessage.objects.get(member=user, team=item.teamID).nums
+            else:
+                unread = 0
             team = {
                 "teamID": item.teamID.id,
                 "name": item.teamID.name,
+                "unread": unread,
                 "official": item.teamID.isReal,
                 'teamProfile': URL + item.teamID.profile.url
             }
@@ -230,19 +236,26 @@ def getAllFriends(request):
             if person == user:
                 continue
             if person.email not in result:
+                if SingleUnread.objects.filter(host=user, guest=person).count() != 0:
+                    unread = SingleUnread.objects.get(host=user, guest=person).cnt
+                else:
+                    unread = 0
                 info = {
                     'nickname': person.nickname,
                     'realname': person.realname,
+                    'unread': unread,
                     'profile': URL + person.profile.url,
                     'teams': [{'teamID': item.teamID.id,
                                'name': item.teamID.name,
-                               'profile': URL + item.teamID.profile.url}]
+                               'profile': URL + item.teamID.profile.url,
+                               'official': item.teamID.isReal}]
                 }
                 result[person.email] = info
             else:
                 result[person.email]['teams'].append({'teamID': item.teamID.id,
                                                       'name': item.teamID.name,
-                                                      'profile': URL + item.teamID.profile.url})
+                                                      'profile': URL + item.teamID.profile.url,
+                                                      'official': item.teamID.isReal})
         return JsonResponse({'msg': 'success', 'colleague': result}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
@@ -593,12 +606,45 @@ def accessTeamChat(request):
         teamID = json.loads(request.body).get('teamID')
         team = Team.objects.get(id=teamID)
         user = UserInfo.objects.get(email=getUserFromToken(accessToken))
-        obj = AtMessage.objects.get(member=user, team=team)
-        if obj is not None:
-            obj.delete()
-        obj = UnreadMessage.objects.get(member=user, team=team)
-        if obj is not None:
-            obj.delete()
+        if AtMessage.objects.filter(member=user, team=team).count() != 0:
+            AtMessage.objects.get(member=user, team=team).delete()
+        if UnreadMessage.objects.filter(member=user, team=team).count() != 0:
+            UnreadMessage.objects.get(member=user, team=team).delete()
         return JsonResponse({'msg': 'success'}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
+
+
+def getTeamInfo(request, teamID):
+    if request.method != "GET":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    team = Team.objects.get(id=teamID)
+    if team is None:
+        return JsonResponse({'msg': 'fail', 'error': 'teamID is wrong'}, status=400)
+    members = list()
+    candidates = TeamMember.objects.filter(teamID=team)
+    for item in candidates:
+        info = {
+            'email': item.member.email,
+            'nickname': item.member.nickname,
+            'profile': URL + item.member.profile.url,
+            'role': ROLE_ITEM[item.role][1]
+        }
+        members.append(info)
+    projectRes = Project.objects.filter(team=team, isDelete=False)
+    projects = list()
+    for item in projectRes:
+        info = {
+            'projectID': item.id,
+            'name': item.projectName,
+            'profile': URL + item.image.url,
+            'createTime': item.createTime.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        projects.append(info)
+    basic = {
+        'name': team.name,
+        'profile': URL + team.profile.url,
+        'creator': team.creator.email
+    }
+    return JsonResponse({'msg': 'success', 'basic': basic, 'members': members, 'projects': projects}, status=200)

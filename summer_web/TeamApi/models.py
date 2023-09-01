@@ -52,7 +52,7 @@ class SingleMessage(models.Model):
 class SingleUnread(models.Model):
     host = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE, related_name='host')
     guest = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE, related_name='guest')
-    cnt = models.IntegerField(default=1)
+    cnt = models.IntegerField(default=0)
 
 class AtMessage(models.Model):
     member = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE)

@@ -75,7 +75,7 @@ def saveDoc(request):
     doc.context = context
     doc.save()
     if save is not None and save:
-        cnt = DocVersion.objects.filter(docID=doc.id)
+        cnt = DocVersion.objects.filter(docID=doc.id).count()
         DocVersion.objects.create(docID=doc.id, context=context, version=cnt+1)
     return JsonResponse({'msg': 'success'}, status=200)
 
