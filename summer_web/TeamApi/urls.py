@@ -32,5 +32,7 @@ urlpatterns = [
     path('createchatgroup/', chatGroup.createChatGroup),
     path('addtochatgroup/', chatGroup.addToChatGroup),
     path('runrunrun/', chatGroup.delFromChatGroup),
-    path('delchatgroup/', chatGroup.delTotalChatGroup)
+    path('delchatgroup/', chatGroup.delTotalChatGroup),
+
+    path('send/', views.differ)
 ]

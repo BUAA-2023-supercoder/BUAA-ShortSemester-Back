@@ -159,13 +159,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "nickname": await sync_to_async(lambda: msg.sender.nickname)(),
             "realname": await sync_to_async(lambda: msg.sender.realname)(),
         }
-        receiver = {
-            "name": await sync_to_async(lambda: msg.team.name)(),
-            "id": str(await sync_to_async(lambda: msg.team.id)())
-        }
+        if msg.isGroup:
+            receiver = {
+                "name": await sync_to_async(lambda: msg.team.name)(),
+                "id": str(await sync_to_async(lambda: msg.team.id)()),
+            }
+        else:
+            receiver = {
+                "name": await sync_to_async(lambda: msg.team.name)(),
+                "id": str(await sync_to_async(lambda: msg.receiver.email)()),
+            }
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
-            "group": True,
+            "group": msg.isGroup,
             "msg": message,
             "type": msg.type,
             "messageID": ID,

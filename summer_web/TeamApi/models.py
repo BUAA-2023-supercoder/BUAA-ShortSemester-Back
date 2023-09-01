@@ -1,4 +1,6 @@
 from django.db import models
+from pyasn1.compat.octets import null
+
 
 # Create your models here.
 class Team(models.Model):
@@ -30,9 +32,11 @@ class TeamMessage(models.Model):
     image = models.ImageField(upload_to='Images/', null=True)
     file = models.FileField(upload_to='Files/', null=True)
     fileName = models.CharField(max_length=128, null=True)
-    sender = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE)
+    isGroup = models.BooleanField(default=True)
+    sender = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE, related_name='sender', null=True)
+    receiver = models.ForeignKey('UserApi.UserInfo', on_delete=models.CASCADE, related_name='receiver', null=True)
     time = models.DateTimeField(auto_now_add=True)
-    team = models.ForeignKey('Team', on_delete=models.CASCADE)
+    team = models.ForeignKey('Team', on_delete=models.CASCADE, null=True)
 
 
 class SingleMessage(models.Model):

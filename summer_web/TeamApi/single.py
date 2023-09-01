@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.utils.crypto import get_random_string
 
 from summer_web.urls import URL
-from .models import SingleMessage, SingleUnread
+from .models import SingleUnread, TeamMessage
 from UserApi.models import UserInfo, GENDER_ITEMS
 from UserApi.admin import validateAccessToken, getUserFromToken
 
@@ -18,10 +18,10 @@ def addSingleMessage(request):
     accessToken = request.headers.get('Authorization').split(' ')[1]
     if validateAccessToken(accessToken):
         data = request.POST
-        receiver = UserInfo.objects.get(email=data.get('email'))
+        receiver = UserInfo.objects.get(email=data.get('receiver'))
         sender = UserInfo.objects.get(email=getUserFromToken(accessToken))
         type = data.get('type')
-        newMsg = SingleMessage.objects.create(sendUser=sender, receiveUser=receiver, type=0)
+        newMsg = TeamMessage.objects.create(sendUser=sender, receiveUser=receiver, type=0, isGroup=False)
         if type == 'text':
             if data.get('text') is None:
                 newMsg.delete()

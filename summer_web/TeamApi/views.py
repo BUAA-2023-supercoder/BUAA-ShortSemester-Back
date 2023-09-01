@@ -9,6 +9,7 @@ from summer_web.urls import URL
 from .models import Team, TeamMember, TYPE_ITEM, ROLE_ITEM, TeamMessage, AtMessage, UnreadMessage, SingleUnread
 from UserApi.models import UserInfo, GENDER_ITEMS
 from UserApi.admin import validateAccessToken, getUserFromToken
+from .single import addSingleMessage
 
 
 # Create your views here.
@@ -26,7 +27,6 @@ def createTeam(request):
         return JsonResponse({'msg': 'success'}, status=200)
     else:
         JsonResponse({'message': 'fail', 'error': 'please login first'}, status=400)
-
 
 def setAdmin(request):
     if request.method != "POST":
@@ -179,6 +179,7 @@ def getAllTeam(request):
             team = {
                 "teamID": item.teamID.id,
                 "name": item.teamID.name,
+                "official": item.teamID.isReal,
                 'teamProfile': URL + item.teamID.profile.url
             }
             result.append(team)
@@ -233,11 +234,15 @@ def getAllFriends(request):
                     'nickname': person.nickname,
                     'realname': person.realname,
                     'profile': URL + person.profile.url,
-                    'teams': [{'teamID': item.teamID.id, 'name': item.teamID.name}]
+                    'teams': [{'teamID': item.teamID.id,
+                               'name': item.teamID.name,
+                               'profile': URL + item.teamID.profile.url}]
                 }
                 result[person.email] = info
             else:
-                result[person.email]['teams'].append({'teamID': item.teamID.id, 'name': item.teamID.name})
+                result[person.email]['teams'].append({'teamID': item.teamID.id,
+                                                      'name': item.teamID.name,
+                                                      'profile': URL + item.teamID.profile.url})
         return JsonResponse({'msg': 'success', 'colleague': result}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
@@ -256,7 +261,7 @@ def saveUnread(sender, team):
         else:
             if UnreadMessage.objects.filter(team=team, member=person.member).count() != 0:
                 UnreadMessage.objects.get(team=team, member=person.member).delete()
-    return
+    return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
 
 
 def addMessage(request):
@@ -322,6 +327,16 @@ def addMessage(request):
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
 
+
+def differ(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    isGroup = request.POST.get('group')
+    if isGroup:
+        return addMessage(request)
+    else:
+        return addSingleMessage(request)
 
 def messageAt(request):
     if request.method != "POST":
