@@ -87,12 +87,13 @@ def accessSingleChat(request):
 
     accessToken = request.headers.get('Authorization').split(' ')[1]
     if validateAccessToken(accessToken):
-        data = request.POST
+        data = json.loads(request.body)
         sender = UserInfo.objects.get(email=data.get('email'))
         receiver = UserInfo.objects.get(email=getUserFromToken(accessToken))
         if sender is None:
             return JsonResponse({'msg': 'fail', 'error': 'this email is wring'}, status=400)
-        SingleUnread.objects.get(host=sender, guest=receiver).delete()
+        if SingleUnread.objects.filter(host=receiver, guest=sender).count() != 0:
+            SingleUnread.objects.get(host=receiver, guest=sender).delete()
         return JsonResponse({'msg': 'success'}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)

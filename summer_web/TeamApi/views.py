@@ -571,7 +571,7 @@ def getUnreadInfo(request):
         singleInfo = list()
         for item in singleRecord:
             info = {
-                'email': item.host.email,
+                'email': item.guest.email,
                 'nums': item.cnt
             }
             totNum = totNum + item.cnt
