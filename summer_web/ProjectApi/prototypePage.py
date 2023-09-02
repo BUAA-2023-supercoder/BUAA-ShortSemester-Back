@@ -34,26 +34,21 @@ def savePage(request):
     if request.method != "POST":
         return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
 
-    accessToken = request.headers.get('Authorization').split(' ')[1]
-    if validateAccessToken(accessToken):
-        data = json.loads(request.body)
-        pageID = data.get('pageID')
-        context = data.get('context')
-        onEdit = data.get('onEdit')
-        page = PrototypePage.objects.get(id=pageID)
-        if page is None:
-            return JsonResponse({'msg': 'fail', 'error': 'pageID is wrong'}, status=400)
-        user = UserInfo.objects.get(email=getUserFromToken(accessToken))
-        if TeamMember.objects.filter(member=user, teamID=page.project.team).count() == 0:
-            return JsonResponse({'msg': 'fail', 'error': 'Theoretically, you should not see this'}, status=400)
-        page.context = context
-        page.onEdit = onEdit
-        page.lastEditTime = datetime.datetime.now()
-        page.lastEditPerson = user.email
-        page.save()
-        return JsonResponse({'msg': 'success'}, status=200)
-    else:
-        return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)
+    data = json.loads(request.body)
+    pageID = data.get('pageID')
+    context = data.get('context')
+    if context is None or context == "" or context == '[]':
+        return JsonResponse({'msg': 'fail', 'error': 'context cannot be empty'}, status=400)
+    onEdit = data.get('onEdit')
+    page = PrototypePage.objects.get(id=pageID)
+    if page is None:
+        return JsonResponse({'msg': 'fail', 'error': 'pageID is wrong'}, status=400)
+    page.context = context
+    page.onEdit = onEdit
+    page.lastEditTime = datetime.datetime.now()
+    page.lastEditPerson = "abyss7893@163.com"
+    page.save()
+    return JsonResponse({'msg': 'success'}, status=200)
 
 
 def renamePage(request):

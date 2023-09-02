@@ -674,6 +674,7 @@ def singleTransmit(request):
                                              isGroup=True,
                                              sender=user,
                                              team=team)
+            saveUnread(user, team)
         else:
             email = data.get('receiver')
             receiver = UserInfo.objects.get(email=email)
@@ -685,6 +686,14 @@ def singleTransmit(request):
                                              isGroup=False,
                                              sender=user,
                                              receiver=receiver)
+            if SingleUnread.objects.filter(host=user, guest=receiver).count() != 0:
+                SingleUnread.objects.get(host=user, guest=receiver).delete()  # A(unread) = 0
+            if SingleUnread.objects.filter(host=receiver, guest=user).count() == 0:
+                SingleUnread.objects.create(host=receiver, guest=user)
+            else:
+                obj = SingleUnread.objects.get(host=receiver, guest=user)
+                obj.cnt = obj.cnt + 1
+                obj.save()
         if obj.type == 0 or obj.type == 3:
             strAfter = obj.text + '@$%' + str(obj.id)
         elif obj.type == 1:

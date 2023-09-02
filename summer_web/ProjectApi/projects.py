@@ -4,7 +4,6 @@ import random
 import time
 
 from django.http import JsonResponse
-from pyasn1.compat.octets import null
 
 from ProjectApi.models import Project, PrototypePage, Document
 from TeamApi.models import Team, TeamMember
@@ -12,7 +11,6 @@ from UserApi.models import UserInfo
 from summer_web.admin import getUserFromToken
 from UserApi.admin import validateAccessToken, getUserFromToken
 from summer_web.urls import URL
-
 
 def getProjectList(request):
     if request.method != "POST":
@@ -79,10 +77,16 @@ def createProject(request):
                                          })
         page = PrototypePage.objects.create(project=project,
                                             prototypeName='untitled',
-                                            lastEditPerson=getUserFromToken(accessToken),
+                                            lastEditPerson=UserInfo.objects.get(email=getUserFromToken(accessToken)).email,
                                             context="",
                                             height=height,
                                             width=width)
+        tp = data.get('type')
+        if 0 <= tp <= 2:
+            path = "./ProjectApi/templates/p" + str(tp) + ".txt"
+            with open(path, "r", encoding='UTF-8') as f:
+                page.context = f.read()
+                page.save()
         return JsonResponse({'msg': 'success', 'pageID': page.id, 'projectID': project.id}, status=200)
     else:
         return JsonResponse({'msg': 'fail', 'error': 'user does not exist'}, status=400)
