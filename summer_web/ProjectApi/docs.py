@@ -10,6 +10,16 @@ from summer_web.admin import getUserFromToken
 from UserApi.admin import validateAccessToken, getUserFromToken
 
 
+TEMPLATE = {
+    "空白模板": 0,
+    "测试分析报告": 1,
+    "用户使用说明书": 2,
+    "软件开发计划书": 3,
+    "软件设计说明书": 4,
+    "部署文档": 5,
+    "需求规格说明书": 6
+}
+
 def createDoc(request):
     if request.method != "POST":
         return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
@@ -36,8 +46,8 @@ def createDoc(request):
             else:
                 project.dict['folder'][folderName]['documents'].append(doc.id)
         tempID = data.get('tpl')
-        if tempID is not None and tempID != "空白模板":
-            path = "./ProjectApi/templates/" + tempID + ".txt"
+        if tempID is not None:
+            path = "./ProjectApi/templates/" + str(TEMPLATE[tempID]) + ".txt"
             with open(path, "r", encoding='UTF-8') as f:
                 doc.context = f.read()
                 doc.save()
