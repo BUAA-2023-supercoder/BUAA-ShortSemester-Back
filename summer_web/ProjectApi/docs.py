@@ -25,7 +25,7 @@ def createDoc(request):
         doc = Document.objects.create(project=project,
                                       documentName=name,
                                       context="",
-                                      lastEditPerson=getUserFromToken(accessToken))
+                                      lastEditPerson=UserInfo.objects.get(email=getUserFromToken(accessToken)).email)
         folderName = data.get('folder')
         if folderName is None:
             print(project.dict['document'])
@@ -35,6 +35,12 @@ def createDoc(request):
                 return JsonResponse({'msg': 'fail', 'error': 'wrong folder name'}, status=204)
             else:
                 project.dict['folder'][folderName]['documents'].append(doc.id)
+        tempID = data.get('tpl')
+        if tempID is not None and tempID != "":
+            path = "./ProjectApi/templates/" + tempID + ".txt"
+            with open(path, "r", encoding='UTF-8') as f:
+                doc.context = f.read()
+                doc.save()
         project.save()
         return JsonResponse({'msg': 'success', 'docID': doc.id}, status=200)
     else:

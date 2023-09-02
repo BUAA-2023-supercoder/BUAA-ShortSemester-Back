@@ -21,6 +21,7 @@ urlpatterns = [
     path('accessteamgroup/', views.accessTeamChat),
     path('getunread/', views.getUnreadInfo),
     path('teaminfo/<int:teamID>', views.getTeamInfo),
+    path('singletransmit/', views.singleTransmit),
 
 
     path('chathistory/', views.getHistory),

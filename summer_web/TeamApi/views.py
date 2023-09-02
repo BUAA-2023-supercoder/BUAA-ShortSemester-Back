@@ -29,6 +29,7 @@ def createTeam(request):
     else:
         JsonResponse({'message': 'fail', 'error': 'please login first'}, status=400)
 
+
 def setAdmin(request):
     if request.method != "POST":
         return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
@@ -351,6 +352,7 @@ def differ(request):
     else:
         return addSingleMessage(request)
 
+
 def messageAt(request):
     if request.method != "POST":
         return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
@@ -648,3 +650,47 @@ def getTeamInfo(request, teamID):
         'creator': team.creator.email
     }
     return JsonResponse({'msg': 'success', 'basic': basic, 'members': members, 'projects': projects}, status=200)
+
+
+def singleTransmit(request):
+    if request.method != "POST":
+        return JsonResponse({'msg': 'fail', 'error': 'wrong request method'}, status=500)
+
+    accessToken = request.headers.get('Authorization').split(' ')[1]
+    if validateAccessToken(accessToken):
+        data = json.loads(request.body)
+        msgID = data.get('msgID')
+        user = UserInfo.objects.get(email=getUserFromToken(accessToken))
+        msg = TeamMessage.objects.get(id=msgID)
+        isGroup = data.get('group')
+        if isGroup:
+            teamID = data.get('teamID')
+            team = Team.objects.get(id=teamID)
+            obj = TeamMessage.objects.create(type=msg.type,
+                                             text=msg.text,
+                                             image=msg.image,
+                                             file=msg.file,
+                                             fileName=msg.fileName,
+                                             isGroup=True,
+                                             sender=user,
+                                             team=team)
+        else:
+            email = data.get('receiver')
+            receiver = UserInfo.objects.get(email=email)
+            obj = TeamMessage.objects.create(type=msg.type,
+                                             text=msg.text,
+                                             image=msg.image,
+                                             file=msg.file,
+                                             fileName=msg.fileName,
+                                             isGroup=False,
+                                             sender=user,
+                                             receiver=receiver)
+        if obj.type == 0 or obj.type == 3:
+            strAfter = obj.text + '@$%' + str(obj.id)
+        elif obj.type == 1:
+            strAfter = '$$$' + 'Images' + '$$$' + obj.image.name + '@$%' + str(obj.id)
+        else:
+            strAfter = '$$$' + 'Files' + '$$$' + obj.fileName + '@$%' + str(obj.id)
+        return JsonResponse({'msg': 'success', 'str': strAfter, 'ID': obj.id}, status=200)
+    else:
+        return JsonResponse({'msg': 'fail', 'error': 'please login first'}, status=400)
