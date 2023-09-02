@@ -36,7 +36,7 @@ def createDoc(request):
             else:
                 project.dict['folder'][folderName]['documents'].append(doc.id)
         tempID = data.get('tpl')
-        if tempID is not None and tempID != "":
+        if tempID is not None and tempID != "空白模板":
             path = "./ProjectApi/templates/" + tempID + ".txt"
             with open(path, "r", encoding='UTF-8') as f:
                 doc.context = f.read()
